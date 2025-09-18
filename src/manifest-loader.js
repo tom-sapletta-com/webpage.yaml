@@ -3,11 +3,15 @@
  * Supports URL-based loading, dependency resolution, and caching
  */
 
+const jsyaml = require('js-yaml');
+const path = require('path');
+
 class ManifestLoader {
   constructor(options = {}) {
     this.cache = new Map();
     this.loadingPromises = new Map();
     this.baseUrl = options.baseUrl || '';
+    this.baseDir = options.baseDir || options; // Support both options object and string
     this.maxCacheAge = options.maxCacheAge || 300000; // 5 minutes
     this.resolver = new DependencyResolver();
   }
@@ -65,7 +69,8 @@ class ManifestLoader {
       yamlContent = await response.text();
     } else {
       // Load from local file or relative path
-      yamlContent = await this._loadLocalFile(url);
+      const fullPath = path.resolve(this.baseDir, url);
+      yamlContent = await this._loadLocalFile(fullPath);
     }
 
     // Parse YAML
@@ -76,7 +81,7 @@ class ManifestLoader {
 
     // Resolve and load modules
     if (manifest.modules && manifest.modules.length > 0) {
-      manifest._resolvedModules = await this._resolveModules(manifest.modules, url);
+      manifest.modules = await this._resolveModules(manifest.modules, url);
     }
 
     // Process imports
@@ -96,7 +101,23 @@ class ManifestLoader {
   async _resolveModules(modules, baseUrl) {
     const resolvedModules = {};
     const loadPromises = modules.map(async (moduleConfig) => {
-      const moduleUrl = this.resolveUrl(moduleConfig.url, baseUrl);
+      let moduleUrl;
+      
+      if (moduleConfig.url.startsWith('http')) {
+        // Absolute HTTP URL
+        moduleUrl = moduleConfig.url;
+      } else if (moduleConfig.url.startsWith('/')) {
+        // Absolute local path
+        moduleUrl = moduleConfig.url;
+      } else {
+        // Relative path - resolve relative to the current manifest's directory within baseDir
+        const currentManifestFullPath = path.resolve(this.baseDir, baseUrl);
+        const currentManifestDir = path.dirname(currentManifestFullPath);
+        const resolvedFullPath = path.resolve(currentManifestDir, moduleConfig.url);
+        // Make path relative to baseDir
+        moduleUrl = path.relative(path.resolve(this.baseDir), resolvedFullPath);
+      }
+      
       const loadedModule = await this.loadManifest(moduleUrl);
       
       // Apply version constraints if specified
@@ -107,7 +128,11 @@ class ManifestLoader {
       resolvedModules[moduleConfig.alias] = {
         config: moduleConfig,
         manifest: loadedModule,
-        url: moduleUrl
+        url: moduleUrl,
+        loaded: true,
+        source: moduleConfig.url,
+        version: moduleConfig.version || 'latest',
+        exports: loadedModule.exports || {}
       };
     });
 
@@ -222,10 +247,28 @@ class ManifestLoader {
    */
   _checkVersionCompatibility(manifest, requiredVersion) {
     const manifestVersion = manifest.manifest?.version || '1.0.0';
+    
     // Simple version check - in production, use a proper semver library
     if (requiredVersion.startsWith('^')) {
       const required = requiredVersion.slice(1);
-      if (manifestVersion < required) {
+      
+      // Convert versions to comparable format (e.g., "2.0" -> "2.0.0")
+      const normalizeVersion = (v) => {
+        const parts = v.split('.');
+        while (parts.length < 3) parts.push('0');
+        return parts.map(p => parseInt(p)).join('.');
+      };
+      
+      const normalizedManifest = normalizeVersion(manifestVersion);
+      const normalizedRequired = normalizeVersion(required);
+      
+      // For caret (^) compatibility: major version must match, minor/patch can be higher
+      const manifestParts = normalizedManifest.split('.').map(p => parseInt(p));
+      const requiredParts = normalizedRequired.split('.').map(p => parseInt(p));
+      
+      if (manifestParts[0] !== requiredParts[0] || 
+          manifestParts[0] < requiredParts[0] ||
+          (manifestParts[0] === requiredParts[0] && manifestParts[1] < requiredParts[1])) {
         throw new Error(`Version mismatch: required ${requiredVersion}, got ${manifestVersion}`);
       }
     }
@@ -249,7 +292,12 @@ class ManifestLoader {
     
     const base = baseUrl || this.baseUrl;
     if (base && !url.startsWith('/')) {
-      return new URL(url, base).href;
+      // Handle HTTP URLs
+      if (base.startsWith('http://') || base.startsWith('https://')) {
+        return new URL(url, base).href;
+      }
+      // Handle local paths
+      return path.join(base, url);
     }
     
     return url;
