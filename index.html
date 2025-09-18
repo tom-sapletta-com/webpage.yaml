@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Formularz YAML z podglądem</title>
+
+  <!-- CodeMirror 5 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/yaml/yaml.min.js"></script>
+
+  <!-- JS-YAML -->
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+
+  <style>
+    body { display:flex; gap:20px; font-family:Arial,sans-serif; margin:20px; }
+    #editor { width:40%; height:90vh; border:1px solid #ccc; }
+    #preview { width:55%; border:1px solid #ccc; padding:10px; overflow:auto; }
+    button { margin-top:10px; cursor:pointer; }
+  </style>
+    <style>
+
+
+  body {
+    display: flex;
+    gap: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  #editor .CodeMirror{
+    flex: 0 0 40%; /* 40% szerokości */
+    height: 100%;
+    border: 1px solid #ccc;
+  }
+
+  #preview {
+    flex: 1; /* reszta szerokości */
+    height: 100%;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow: auto;
+  }
+</style>
+
+</head>
+<body>
+
+<div id="editor"></div>
+<div id="preview"></div>
+
+<script>
+// Funkcje do generowania HTML i CSS z YAML
+function mergeStyles(styles, name) {
+  const style = {...(styles[name].extends ? mergeStyles(styles, styles[name].extends) : {}), ...styles[name]};
+  delete style.extends;
+  return style;
+}
+
+function styleToCss(styleObj) {
+  return Object.entries(styleObj)
+    .map(([k,v]) => `${k.replace(/([A-Z])/g,'-$1').toLowerCase()}:${v};`)
+    .join(' ');
+}
+
+function generateCss(styles) {
+  let css = '';
+  for (const name in styles) {
+    const className = name.replace(/_/g, '-');
+    css += `.${className} { ${styleToCss(mergeStyles(styles, name))} }\n`;
+  }
+  return css;
+}
+
+function createElement(node) {
+  const keys = Object.keys(node);
+  const tag = keys[0];
+  const props = node[tag];
+  const el = document.createElement(tag);
+
+  if (props.style) el.className = props.style.replace(/_/g, '-');
+  if (props.text) el.textContent = props.text;
+  if (props.id) el.id = props.id;
+  if (props.type) el.type = props.type;
+
+  if (props.children) {
+    const children = Array.isArray(props.children) ? props.children : [props.children];
+    children.forEach(child => el.appendChild(createElement(child)));
+  }
+  return el;
+}
+
+function renderManifest(yamlText) {
+  let manifest;
+  try {
+    manifest = jsyaml.load(yamlText);
+  } catch(e) {
+    console.warn("Błąd YAML:", e.message);
+    return;
+  }
+
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+
+  // Dodaj style
+  const styleEl = document.createElement('style');
+  styleEl.textContent = generateCss(manifest.styles);
+  preview.appendChild(styleEl);
+
+  // Dodaj strukturę
+  const root = createElement(manifest.structure);
+  preview.appendChild(root);
+}
+
+// Przykładowy manifest startowy
+const initialYaml = `
+styles:
+  base:
+    font-family: Arial, sans-serif
+    margin: 20px
+  container:
+    extends: base
+    background: "#f9f9f9"
+    padding: 20px
+    border-radius: 5px
+    max-width: 500px
+  label:
+    display: block
+    margin-bottom: 10px
+  input_base:
+    width: 100%
+    padding: 5px
+    margin-top: 3px
+  input_text:
+    extends: input_base
+  textarea:
+    extends: input_base
+  select:
+    extends: input_base
+  button:
+    padding: 10px 15px
+    margin-top: 10px
+    cursor: pointer
+  result:
+    margin-top: 15px
+    font-weight: bold
+
+structure:
+  body:
+    style: base
+    children:
+      form:
+        style: container
+        children:
+          - label:
+              text: "Imię"
+              style: label
+          - input:
+              type: text
+              style: input_text
+          - label:
+              text: "Wiadomość"
+              style: label
+          - textarea:
+              style: textarea
+          - button:
+              text: "Wyślij"
+              style: button
+          - div:
+              id: result
+              style: result
+`;
+
+// Inicjalizacja CodeMirror
+const editor = CodeMirror(document.getElementById("editor"), {
+  value: initialYaml,
+  mode: "yaml",
+  lineNumbers: true
+});
+
+// Podgląd na żywo
+editor.on("change", () => {
+  renderManifest(editor.getValue());
+});
+
+// Pierwsze renderowanie
+renderManifest(initialYaml);
+</script>
+
+</body>
+</html>
