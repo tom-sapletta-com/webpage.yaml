@@ -83,7 +83,7 @@ structure:      # definicja struktury DOM
   * `type` – np. `text` dla inputów
   * `children` – listę dzieci, rekursywnie
 
----
+<img width="849" height="983" alt="image" src="https://github.com/user-attachments/assets/db81d6ba-5eff-4b31-b3ea-945964452052" />
 
 ## 4. Mechanizm działania
 
@@ -141,6 +141,7 @@ structure:      # definicja struktury DOM
 1. Dodaj definicję stylu w `styles`
 2. Dodaj element w `structure` z odpowiednią klasą CSS
 3. Elementy mogą mieć `children` dla zagnieżdżonych elementów
+
 
 ---
 
