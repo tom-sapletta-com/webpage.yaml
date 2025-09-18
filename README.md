@@ -12,7 +12,8 @@ Projekt umożliwia tworzenie stron HTML z formularzami lub innymi elementami pop
 
 Dzięki temu można w łatwy sposób projektować strony i formularze bez ręcznego pisania HTML/CSS.
 
----
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/27a758ec-8f21-4b66-8bc7-de55ebdd6564" />
+
 
 ## 2. Technologie
 
