@@ -1,0 +1,94 @@
+manifest:
+  version: "2.0"
+  name: "header-component"
+  description: "Reusable header component with navigation"
+
+styles:
+  header-main:
+    background: "linear-gradient(90deg, #1e40af, #3b82f6)"
+    color: white
+    padding: "1rem 2rem"
+    box-shadow: "0 2px 10px rgba(0,0,0,0.1)"
+    position: sticky
+    top: 0
+    z-index: 100
+
+  nav-container:
+    display: flex
+    justify-content: space-between
+    align-items: center
+    max-width: 1200px
+    margin: "0 auto"
+
+  logo:
+    font-size: "1.5rem"
+    font-weight: bold
+    text-decoration: none
+    color: white
+
+  nav-menu:
+    display: flex
+    list-style: none
+    margin: 0
+    padding: 0
+    gap: "2rem"
+
+  nav-link:
+    color: white
+    text-decoration: none
+    padding: "0.5rem 1rem"
+    border-radius: 4px
+    transition: "background 0.2s"
+
+  nav-link-hover:
+    extends: nav-link
+    background: "rgba(255,255,255,0.2)"
+
+structure:
+  header:
+    style: header-main
+    children:
+      nav:
+        style: nav-container
+        children:
+          - a:
+              href: "/"
+              style: logo
+              text: "🎯 MyApp"
+          - ul:
+              style: nav-menu
+              children:
+                - li:
+                    children:
+                      a:
+                        href: "/"
+                        style: nav-link
+                        text: "Home"
+                - li:
+                    children:
+                      a:
+                        href: "/about"
+                        style: nav-link
+                        text: "About"
+                - li:
+                    children:
+                      a:
+                        href: "/services"
+                        style: nav-link
+                        text: "Services"
+                - li:
+                    children:
+                      a:
+                        href: "/contact"
+                        style: nav-link
+                        text: "Contact"
+
+exports:
+  components:
+    - "header-main"
+  styles:
+    - "header-main"
+    - "nav-container"
+    - "logo"
+    - "nav-menu"
+    - "nav-link"

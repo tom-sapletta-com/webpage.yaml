@@ -1,0 +1,171 @@
+# Extended Manifest Schema for Modular Web Components
+# Version 2.0 - Supports modules, imports, and multi-format conversion
+
+# Core manifest structure
+manifest:
+  version: "2.0"
+  name: "example-component"
+  description: "Extended manifest with module support"
+  
+  # Module system configuration
+  modules:
+    # List of sub-manifests to load
+    - url: "./components/header.yaml"
+      alias: "header"
+      version: "^1.0.0"
+    - url: "https://cdn.manifests.com/footer.yaml"
+      alias: "footer"
+      version: "latest"
+    - url: "./styles/theme.yaml"
+      alias: "theme"
+      type: "styles-only"
+
+  # Import external resources
+  imports:
+    scripts:
+      - "https://unpkg.com/react@18/umd/react.production.min.js"
+      - "./js/custom.js"
+    styles:
+      - "https://cdn.tailwindcss.com"
+      - "./css/custom.css"
+    fonts:
+      - "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+
+  # Export configuration for other manifests
+  exports:
+    components:
+      - "main-layout"
+      - "button-primary"
+    styles:
+      - "theme-colors"
+      - "layout-grid"
+
+# Traditional styles section with module references
+styles:
+  base:
+    font-family: Inter, Arial, sans-serif
+    margin: 0
+    padding: 0
+  
+  # Reference styles from imported modules
+  theme-colors:
+    extends: "theme.colors"  # From theme module
+  
+  container:
+    extends: base
+    max-width: 1200px
+    margin: "0 auto"
+    padding: 20px
+
+  # Component-specific styles
+  main-layout:
+    display: grid
+    grid-template-areas: |
+      "header header"
+      "sidebar main"
+      "footer footer"
+    grid-template-columns: "250px 1fr"
+    min-height: 100vh
+
+  button-primary:
+    extends: "theme.button-base"  # From theme module
+    background: "#3b82f6"
+    color: white
+    padding: "12px 24px"
+    border: none
+    border-radius: 6px
+    cursor: pointer
+    
+# Structure with module composition
+structure:
+  html:
+    lang: en
+    children:
+      head:
+        children:
+          - meta:
+              charset: "UTF-8"
+          - meta:
+              name: "viewport"
+              content: "width=device-width, initial-scale=1.0"
+          - title:
+              text: "Modular Manifest Example"
+      body:
+        style: base
+        children:
+          - div:
+              style: main-layout
+              children:
+                - header:
+                    style: "header.main-header"  # From header module
+                    module: "header"
+                    props:
+                      title: "My Website"
+                      navigation:
+                        - text: "Home"
+                          href: "/"
+                        - text: "About"
+                          href: "/about"
+                - main:
+                    grid-area: main
+                    children:
+                      - h1:
+                          text: "Welcome to Modular Manifests"
+                          style: theme-colors
+                      - button:
+                          text: "Click me"
+                          style: button-primary
+                          onclick: "handleClick()"
+                - footer:
+                    module: "footer"
+                    props:
+                      copyright: "2024 My Company"
+
+# Event handlers and interactions
+interactions:
+  handleClick:
+    type: "javascript"
+    code: |
+      function handleClick() {
+        alert('Button clicked from manifest!');
+      }
+
+# Responsive breakpoints
+responsive:
+  mobile:
+    max-width: 768px
+    styles:
+      main-layout:
+        grid-template-areas: |
+          "header"
+          "main"
+          "sidebar"
+          "footer"
+        grid-template-columns: "1fr"
+  
+  tablet:
+    min-width: 769px
+    max-width: 1024px
+    styles:
+      container:
+        padding: 16px
+
+# Conversion targets configuration
+targets:
+  react:
+    component-name: "ModularComponent"
+    props-interface: "ModularComponentProps"
+    export-default: true
+  
+  vue:
+    component-name: "ModularComponent"
+    script-lang: "typescript"
+    
+  php:
+    class-name: "ModularComponent"
+    namespace: "App\\Components"
+  
+  html:
+    standalone: true
+    include-css: true
+    include-js: true

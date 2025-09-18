@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Formularz YAML z podglądem</title>
+  <title>Modular YAML Manifest Generator</title>
 
   <!-- CodeMirror 5 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
@@ -11,42 +11,232 @@
 
   <!-- JS-YAML -->
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+  
+  <!-- Load our modular system -->
+  <script src="./src/manifest-loader.js"></script>
+  <script src="./src/converters/format-converters.js"></script>
 
   <style>
-    body { display:flex; gap:20px; font-family:Arial,sans-serif; margin:20px; }
-    #editor { width:40%; height:90vh; border:1px solid #ccc; }
-    #preview { width:55%; border:1px solid #ccc; padding:10px; overflow:auto; }
-    button { margin-top:10px; cursor:pointer; }
+    * { box-sizing: border-box; }
+    body { 
+      margin: 0; 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f8fafc;
+    }
+    
+    .header {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0;
+      color: #1e293b;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: white;
+      color: #374151;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      height: calc(100vh - 120px);
+    }
+    
+    .panel {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .panel-header {
+      padding: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    
+    .panel-content {
+      flex: 1;
+      overflow: auto;
+    }
+    
+    #editor {
+      height: 100%;
+    }
+    
+    #editor .CodeMirror {
+      height: 100%;
+      font-size: 14px;
+    }
+    
+    #preview {
+      padding: 1rem;
+    }
+    
+    .format-tabs {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .format-tab {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-size: 0.875rem;
+    }
+    
+    .format-tab.active {
+      border-bottom-color: #3b82f6;
+      color: #3b82f6;
+      font-weight: 600;
+    }
+    
+    .format-content {
+      display: none;
+      padding: 1rem;
+      height: calc(100% - 50px);
+      overflow: auto;
+    }
+    
+    .format-content.active {
+      display: block;
+    }
+    
+    .url-input {
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      flex: 1;
+      margin-right: 0.5rem;
+    }
+    
+    .module-list {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      font-size: 0.875rem;
+    }
+    
+    .error {
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+    }
+    
+    .success {
+      color: #059669;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+    }
+    
+    @media (max-width: 768px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
   </style>
-    <style>
-
-
-  body {
-    display: flex;
-    gap: 20px;
-    font-family: Arial, sans-serif;
-  }
-
-  #editor .CodeMirror{
-    flex: 0 0 40%; /* 40% szerokości */
-    height: 100%;
-    border: 1px solid #ccc;
-  }
-
-  #preview {
-    flex: 1; /* reszta szerokości */
-    height: 100%;
-    border: 1px solid #ccc;
-    padding: 10px;
-    overflow: auto;
-  }
-</style>
 
 </head>
 <body>
-
-<div id="editor"></div>
-<div id="preview"></div>
+  <div class="header">
+    <h1>🎯 Modular YAML Manifest Generator</h1>
+    <div class="toolbar">
+      <input type="url" class="url-input" id="urlInput" placeholder="Enter URL to convert to manifest...">
+      <button class="btn btn-primary" onclick="convertUrl()">Convert URL</button>
+      <button class="btn" onclick="loadExample()">Load Example</button>
+      <button class="btn" onclick="exportAllFormats()">Export All Formats</button>
+      <button class="btn" onclick="validateManifest()">Validate</button>
+      <button class="btn" onclick="bundleModules()">Bundle Modules</button>
+    </div>
+  </div>
+  
+  <div class="main-container">
+    <div class="panel">
+      <div class="panel-header">
+        📝 YAML Manifest Editor
+        <div class="module-list" id="moduleList" style="display: none;"></div>
+      </div>
+      <div class="panel-content">
+        <div id="editor"></div>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <div class="panel-header">
+        <div class="format-tabs">
+          <button class="format-tab active" onclick="switchFormat('preview')">🔍 Preview</button>
+          <button class="format-tab" onclick="switchFormat('react')">⚛️ React</button>
+          <button class="format-tab" onclick="switchFormat('vue')">💚 Vue</button>
+          <button class="format-tab" onclick="switchFormat('php')">🐘 PHP</button>
+          <button class="format-tab" onclick="switchFormat('html')">🌐 HTML</button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div id="preview-content" class="format-content active"></div>
+        <div id="react-content" class="format-content"><pre><code id="react-code"></code></pre></div>
+        <div id="vue-content" class="format-content"><pre><code id="vue-code"></code></pre></div>
+        <div id="php-content" class="format-content"><pre><code id="php-code"></code></pre></div>
+        <div id="html-content" class="format-content"><pre><code id="html-code"></code></pre></div>
+      </div>
+    </div>
+  </div>
 
 <script>
 // Funkcje do generowania HTML i CSS z YAML
@@ -111,79 +301,458 @@ function renderManifest(yamlText) {
   preview.appendChild(root);
 }
 
-// Przykładowy manifest startowy
-const initialYaml = `
+// Enhanced manifest with modular features
+const initialYaml = `manifest:
+  version: "2.0"
+  name: "modular-example"
+  description: "Example of modular manifest system"
+
+modules:
+  - url: "./components/header.yaml"
+    alias: "header"
+    version: "^1.0.0"
+  - url: "./components/form.yaml"
+    alias: "form"
+    version: "latest"
+
+imports:
+  styles:
+    - "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+  scripts:
+    - "https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+
 styles:
   base:
-    font-family: Arial, sans-serif
-    margin: 20px
+    font-family: "Inter, Arial, sans-serif"
+    margin: 0
+    padding: 20px
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+    min-height: "100vh"
+  
   container:
     extends: base
-    background: "#f9f9f9"
-    padding: 20px
-    border-radius: 5px
-    max-width: 500px
+    background: "rgba(255,255,255,0.95)"
+    padding: 2rem
+    border-radius: 12px
+    box-shadow: "0 20px 40px rgba(0,0,0,0.1)"
+    max-width: 600px
+    margin: "2rem auto"
+    backdrop-filter: "blur(10px)"
+  
+  title:
+    font-size: "2rem"
+    font-weight: 600
+    color: "#1e293b"
+    margin-bottom: "1.5rem"
+    text-align: center
+  
+  form-group:
+    margin-bottom: "1.5rem"
+  
   label:
     display: block
-    margin-bottom: 10px
-  input_base:
-    width: 100%
-    padding: 5px
-    margin-top: 3px
-  input_text:
-    extends: input_base
-  textarea:
-    extends: input_base
-  select:
-    extends: input_base
-  button:
-    padding: 10px 15px
-    margin-top: 10px
+    margin-bottom: "0.5rem"
+    font-weight: 600
+    color: "#374151"
+  
+  input-base:
+    width: "100%"
+    padding: "0.75rem"
+    border: "2px solid #e5e7eb"
+    border-radius: 8px
+    font-size: "1rem"
+    transition: "all 0.2s"
+    background: white
+  
+  input-focus:
+    extends: input-base
+    border-color: "#3b82f6"
+    box-shadow: "0 0 0 3px rgba(59,130,246,0.1)"
+  
+  button-primary:
+    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)"
+    color: white
+    padding: "0.875rem 2rem"
+    border: none
+    border-radius: 8px
+    font-size: "1rem"
+    font-weight: 600
     cursor: pointer
-  result:
-    margin-top: 15px
-    font-weight: bold
+    transition: "all 0.2s"
+    text-transform: uppercase
+    letter-spacing: "0.5px"
+  
+  button-hover:
+    extends: button-primary
+    transform: "translateY(-2px)"
+    box-shadow: "0 10px 20px rgba(59,130,246,0.3)"
 
 structure:
   body:
     style: base
     children:
-      form:
+      div:
         style: container
         children:
-          - label:
-              text: "Imię"
-              style: label
-          - input:
-              type: text
-              style: input_text
-          - label:
-              text: "Wiadomość"
-              style: label
-          - textarea:
-              style: textarea
-          - button:
-              text: "Wyślij"
-              style: button
+          - h1:
+              text: "🎯 Modular Form Example"
+              style: title
           - div:
-              id: result
-              style: result
-`;
+              style: form-group
+              children:
+                - label:
+                    text: "Full Name"
+                    style: label
+                - input:
+                    type: text
+                    style: input-base
+                    placeholder: "Enter your full name"
+          - div:
+              style: form-group
+              children:
+                - label:
+                    text: "Email Address"
+                    style: label
+                - input:
+                    type: email
+                    style: input-base
+                    placeholder: "your@email.com"
+          - div:
+              style: form-group
+              children:
+                - label:
+                    text: "Message"
+                    style: label
+                - textarea:
+                    style: input-base
+                    placeholder: "Your message here..."
+                    rows: 4
+          - button:
+              text: "Send Message"
+              style: button-primary
+              onclick: "handleSubmit()"
 
-// Inicjalizacja CodeMirror
+interactions:
+  handleSubmit:
+    type: "javascript"
+    code: |
+      function handleSubmit() {
+        const name = document.querySelector('input[type="text"]').value;
+        const email = document.querySelector('input[type="email"]').value;
+        const message = document.querySelector('textarea').value;
+        
+        if (name && email && message) {
+          alert('✅ Message sent successfully!');
+        } else {
+          alert('❌ Please fill in all fields');
+        }
+      }
+
+responsive:
+  mobile:
+    max-width: 768px
+    styles:
+      container:
+        margin: "1rem"
+        padding: "1.5rem"
+      title:
+        font-size: "1.5rem"
+`;`
+
+// Initialize global state
+let currentFormat = 'preview';
+let manifestLoader;
+let converters = {};
+
+// Initialize converters when available
+if (typeof ManifestToReactConverter !== 'undefined') {
+  converters.react = new ManifestToReactConverter();
+  converters.vue = new ManifestToVueConverter();
+  converters.php = new ManifestToPHPConverter();
+  converters.html = new ManifestToHTMLConverter();
+}
+
+if (typeof ManifestLoader !== 'undefined') {
+  manifestLoader = new ManifestLoader();
+}
+
+// Initialize CodeMirror
 const editor = CodeMirror(document.getElementById("editor"), {
   value: initialYaml,
   mode: "yaml",
-  lineNumbers: true
+  lineNumbers: true,
+  theme: 'default',
+  lineWrapping: true,
+  foldGutter: true,
+  gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
 });
 
-// Podgląd na żywo
+// Live preview
 editor.on("change", () => {
-  renderManifest(editor.getValue());
+  debounce(updateAllFormats, 500)();
 });
 
-// Pierwsze renderowanie
-renderManifest(initialYaml);
+// Initialize
+updateAllFormats();
+
+// Format switching
+function switchFormat(format) {
+  // Update active tab
+  document.querySelectorAll('.format-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`[onclick="switchFormat('${format}')"]`).classList.add('active');
+  
+  // Update active content
+  document.querySelectorAll('.format-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.getElementById(`${format}-content`).classList.add('active');
+  
+  currentFormat = format;
+}
+
+// Update all format views
+function updateAllFormats() {
+  const yamlText = editor.getValue();
+  
+  try {
+    const manifest = jsyaml.load(yamlText);
+    
+    // Update preview
+    updatePreview(manifest);
+    
+    // Update other formats if converters are available
+    if (converters.react) {
+      updateReactFormat(manifest);
+      updateVueFormat(manifest);
+      updatePHPFormat(manifest);
+      updateHTMLFormat(manifest);
+    }
+    
+    // Update module list
+    updateModuleList(manifest);
+    
+    // Clear any error messages
+    clearErrors();
+  } catch (error) {
+    showError('YAML Parse Error: ' + error.message);
+  }
+}
+
+// Update preview (original functionality)
+function updatePreview(manifest) {
+  const preview = document.getElementById("preview-content");
+  preview.innerHTML = "";
+
+  // Add styles
+  const styleEl = document.createElement('style');
+  styleEl.textContent = generateCss(manifest.styles || {});
+  preview.appendChild(styleEl);
+
+  // Add structure
+  if (manifest.structure) {
+    const root = createElement(manifest.structure);
+    preview.appendChild(root);
+  }
+  
+  // Add interactions
+  if (manifest.interactions) {
+    const scriptEl = document.createElement('script');
+    const scripts = Object.values(manifest.interactions)
+      .map(interaction => interaction.code)
+      .join('\n\n');
+    scriptEl.textContent = scripts;
+    preview.appendChild(scriptEl);
+  }
+}
+
+// Update React format
+function updateReactFormat(manifest) {
+  try {
+    const result = converters.react.convertToReact(manifest);
+    document.getElementById('react-code').textContent = result.content;
+  } catch (error) {
+    document.getElementById('react-code').textContent = '// Error: ' + error.message;
+  }
+}
+
+// Update Vue format
+function updateVueFormat(manifest) {
+  try {
+    const result = converters.vue.convertToVue(manifest);
+    document.getElementById('vue-code').textContent = result.content;
+  } catch (error) {
+    document.getElementById('vue-code').textContent = '<!-- Error: ' + error.message + ' -->';
+  }
+}
+
+// Update PHP format
+function updatePHPFormat(manifest) {
+  try {
+    const result = converters.php.convertToPHP(manifest);
+    document.getElementById('php-code').textContent = result.content;
+  } catch (error) {
+    document.getElementById('php-code').textContent = '<?php // Error: ' + error.message;
+  }
+}
+
+// Update HTML format
+function updateHTMLFormat(manifest) {
+  try {
+    const result = converters.html.convertToHTML(manifest);
+    document.getElementById('html-code').textContent = result.content;
+  } catch (error) {
+    document.getElementById('html-code').textContent = '<!-- Error: ' + error.message + ' -->';
+  }
+}
+
+// Update module list
+function updateModuleList(manifest) {
+  const moduleList = document.getElementById('moduleList');
+  
+  if (manifest.modules && manifest.modules.length > 0) {
+    moduleList.style.display = 'block';
+    moduleList.innerHTML = '<strong>Modules:</strong> ' + 
+      manifest.modules.map(m => `${m.alias} (${m.url})`).join(', ');
+  } else {
+    moduleList.style.display = 'none';
+  }
+}
+
+// Convert URL to manifest
+async function convertUrl() {
+  const url = document.getElementById('urlInput').value;
+  if (!url) {
+    showError('Please enter a URL');
+    return;
+  }
+  
+  try {
+    showSuccess('Converting URL...');
+    
+    const response = await fetch('/api/convert/url-to-manifest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      const yamlContent = jsyaml.dump(result.manifest, { indent: 2 });
+      editor.setValue(yamlContent);
+      showSuccess('URL converted successfully!');
+    } else {
+      showError('Conversion failed: ' + result.error);
+    }
+  } catch (error) {
+    showError('Network error: ' + error.message);
+  }
+}
+
+// Load example manifest
+function loadExample() {
+  editor.setValue(initialYaml);
+  showSuccess('Example loaded!');
+}
+
+// Export all formats
+async function exportAllFormats() {
+  const yamlText = editor.getValue();
+  
+  try {
+    const manifest = jsyaml.load(yamlText);
+    const formats = ['react', 'vue', 'php', 'html'];
+    
+    for (const format of formats) {
+      const response = await fetch(`/api/convert/manifest-to-${format}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manifest, options: { save: true } })
+      });
+      
+      const result = await response.json();
+      console.log(`${format} exported:`, result);
+    }
+    
+    showSuccess('All formats exported successfully!');
+  } catch (error) {
+    showError('Export failed: ' + error.message);
+  }
+}
+
+// Validate manifest
+function validateManifest() {
+  try {
+    const manifest = jsyaml.load(editor.getValue());
+    
+    // Basic validation
+    const errors = [];
+    
+    if (!manifest.manifest || !manifest.manifest.version) {
+      errors.push('Missing manifest.version');
+    }
+    
+    if (!manifest.structure) {
+      errors.push('Missing structure definition');
+    }
+    
+    if (errors.length > 0) {
+      showError('Validation errors: ' + errors.join(', '));
+    } else {
+      showSuccess('✅ Manifest is valid!');
+    }
+  } catch (error) {
+    showError('Invalid YAML: ' + error.message);
+  }
+}
+
+// Bundle modules (placeholder)
+function bundleModules() {
+  showSuccess('Module bundling not yet implemented in client-side demo');
+}
+
+// Utility functions
+function showError(message) {
+  const existingError = document.querySelector('.error');
+  if (existingError) existingError.remove();
+  
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error';
+  errorDiv.textContent = message;
+  document.querySelector('.toolbar').appendChild(errorDiv);
+  
+  setTimeout(() => errorDiv.remove(), 5000);
+}
+
+function showSuccess(message) {
+  const existingSuccess = document.querySelector('.success');
+  if (existingSuccess) existingSuccess.remove();
+  
+  const successDiv = document.createElement('div');
+  successDiv.className = 'success';
+  successDiv.textContent = message;
+  document.querySelector('.toolbar').appendChild(successDiv);
+  
+  setTimeout(() => successDiv.remove(), 3000);
+}
+
+function clearErrors() {
+  document.querySelectorAll('.error, .success').forEach(el => el.remove());
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 </script>
 
 </body>
