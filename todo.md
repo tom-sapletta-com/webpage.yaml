@@ -12,3 +12,20 @@ zrob server do serowwania stron www z manifestow, aby mozna było łatwo konwert
 - html
 - react
 - vue
+ 
+ 
+Dodaj Makefile i folder scripts z ktorego makefile bedzie urcuhamial skrypty bash/python
+Stworz fodler examples dla przykładów wykorzystania tego rozwiązania z róznymi technologiami, językami jak python, php  i wróżnych konfiguracjach i użyciach
+
+Zmien domyślny port na ustawiony w pliku .env
+dodaj do .env rowniez inne zmienne
+* zmien port na 3009
+
+Rozszerzenia projektu:
+* Automatyczne zapisywanie YAML do pliku lokalnego
+* Eksport HTML + CSS jednym kliknięciem
+* Obsługa dodatkowych tagów i atrybutów HTML
+* Walidacja YAML i wyświetlanie błędów w edytorze
+* Integracja z frameworkiem frontendowym (React/Vue)
+
+

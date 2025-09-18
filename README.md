@@ -143,15 +143,3 @@ structure:      # definicja struktury DOM
 3. Elementy mogą mieć `children` dla zagnieżdżonych elementów
 
 
----
-
-## 7. Rozszerzenia projektu
-
-* Automatyczne zapisywanie YAML do pliku lokalnego
-* Eksport HTML + CSS jednym kliknięciem
-* Obsługa dodatkowych tagów i atrybutów HTML
-* Walidacja YAML i wyświetlanie błędów w edytorze
-* Integracja z frameworkiem frontendowym (React/Vue)
-
-
-Chcesz, żebym to zrobił?

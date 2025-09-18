@@ -28,7 +28,7 @@
     "web-scraper"
   ],
   "author": "Tom Sapletta",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/tom-sapletta-com/webpage.yaml"

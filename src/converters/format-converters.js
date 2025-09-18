@@ -166,20 +166,34 @@ ${jsx}
     
     const attributes = this.convertPropsToJSX(props);
     const children = props.children;
+    const textContent = props.text;
 
-    if (!children && props._selfClosing) {
+    if (!children && !textContent && props._selfClosing) {
       return `${spaces}<${Tag}${attributes} />`;
     }
 
-    if (!children) {
+    if (!children && !textContent) {
       return `${spaces}<${Tag}${attributes}></${Tag}>`;
     }
 
-    const childrenJSX = Array.isArray(children)
-      ? children.map(child => this.convertStructureToJSX(child, indent + 1)).join('\n')
-      : this.convertStructureToJSX(children, indent + 1);
+    let content = '';
+    if (textContent) {
+      content = textContent;
+    }
+    
+    if (children) {
+      const childrenJSX = Array.isArray(children)
+        ? children.map(child => this.convertStructureToJSX(child, indent + 1)).join('\n')
+        : this.convertStructureToJSX(children, indent + 1);
+      
+      if (textContent && children) {
+        content = `${textContent}\n${childrenJSX}\n${spaces}`;
+      } else if (children) {
+        content = `\n${childrenJSX}\n${spaces}`;
+      }
+    }
 
-    return `${spaces}<${Tag}${attributes}>\n${childrenJSX}\n${spaces}</${Tag}>`;
+    return `${spaces}<${Tag}${attributes}>${content}</${Tag}>`;
   }
 
   convertPropsToJSX(props) {
@@ -341,7 +355,7 @@ class ManifestToVueConverter {
     }
 
     if (structure.text) {
-      return `${spaces}{{ ${structure.text} }}`;
+      return `${spaces}${structure.text}`;
     }
 
     const entries = Object.entries(structure);
@@ -349,16 +363,37 @@ class ManifestToVueConverter {
     
     const attributes = this.convertPropsToVue(props);
     const children = props.children;
+    const textContent = props.text;
 
-    if (!children) {
-      return `${spaces}<${tag}${attributes} />`;
+    // Handle self-closing tags
+    const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+    
+    if (!children && !textContent) {
+      if (selfClosingTags.includes(tag)) {
+        return `${spaces}<${tag}${attributes} />`;
+      } else {
+        return `${spaces}<${tag}${attributes}></${tag}>`;
+      }
     }
 
-    const childrenVue = Array.isArray(children)
-      ? children.map(child => this.convertStructureToVue(child, indent + 1)).join('\n')
-      : this.convertStructureToVue(children, indent + 1);
+    let content = '';
+    if (textContent) {
+      content = textContent;
+    }
+    
+    if (children) {
+      const childrenVue = Array.isArray(children)
+        ? children.map(child => this.convertStructureToVue(child, indent + 1)).join('\n')
+        : this.convertStructureToVue(children, indent + 1);
+      
+      if (textContent && children) {
+        content = `${textContent}\n${childrenVue}\n${spaces}`;
+      } else if (children) {
+        content = `\n${childrenVue}\n${spaces}`;
+      }
+    }
 
-    return `${spaces}<${tag}${attributes}>\n${childrenVue}\n${spaces}</${tag}>`;
+    return `${spaces}<${tag}${attributes}>${content}</${tag}>`;
   }
 
   convertPropsToVue(props) {
@@ -533,16 +568,37 @@ ${assignments}
     const [tag, props] = Object.entries(structure)[0];
     const attributes = this.convertPropsToPHP(props);
     const children = props.children;
+    const textContent = props.text;
 
-    if (!children) {
-      return `<${tag}${attributes} />`;
+    // Handle self-closing tags
+    const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+    
+    if (!children && !textContent) {
+      if (selfClosingTags.includes(tag)) {
+        return `<${tag}${attributes} />`;
+      } else {
+        return `<${tag}${attributes}></${tag}>`;
+      }
     }
 
-    const childrenHTML = Array.isArray(children)
-      ? children.map(child => this.convertStructureToPHP(child)).join('')
-      : this.convertStructureToPHP(children);
+    let content = '';
+    if (textContent) {
+      content = textContent;
+    }
+    
+    if (children) {
+      const childrenHTML = Array.isArray(children)
+        ? children.map(child => this.convertStructureToPHP(child)).join('')
+        : this.convertStructureToPHP(children);
+      
+      if (textContent && children) {
+        content = `${textContent}${childrenHTML}`;
+      } else if (children) {
+        content = childrenHTML;
+      }
+    }
 
-    return `<${tag}${attributes}>${childrenHTML}</${tag}>`;
+    return `<${tag}${attributes}>${content}</${tag}>`;
   }
 
   convertPropsToPHP(props) {
@@ -686,16 +742,37 @@ ${styles}${imports}`;
     const [tag, props] = Object.entries(structure)[0];
     const attributes = this.convertPropsToHTML(props);
     const children = props.children;
+    const textContent = props.text;
 
-    if (!children) {
-      return `${spaces}<${tag}${attributes} />`;
+    // Handle self-closing tags
+    const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+    
+    if (!children && !textContent) {
+      if (selfClosingTags.includes(tag)) {
+        return `${spaces}<${tag}${attributes} />`;
+      } else {
+        return `${spaces}<${tag}${attributes}></${tag}>`;
+      }
     }
 
-    const childrenHTML = Array.isArray(children)
-      ? children.map(child => this.convertStructureToHTML(child, indent + 1)).join('\n')
-      : this.convertStructureToHTML(children, indent + 1);
+    let content = '';
+    if (textContent) {
+      content = textContent;
+    }
+    
+    if (children) {
+      const childrenHTML = Array.isArray(children)
+        ? children.map(child => this.convertStructureToHTML(child, indent + 1)).join('\n')
+        : this.convertStructureToHTML(children, indent + 1);
+      
+      if (textContent && children) {
+        content = `\n${spaces}  ${textContent}\n${childrenHTML}\n${spaces}`;
+      } else if (children) {
+        content = `\n${childrenHTML}\n${spaces}`;
+      }
+    }
 
-    return `${spaces}<${tag}${attributes}>\n${childrenHTML}\n${spaces}</${tag}>`;
+    return `${spaces}<${tag}${attributes}>${content}</${tag}>`;
   }
 
   convertPropsToHTML(props) {
