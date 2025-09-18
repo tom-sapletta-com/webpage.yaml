@@ -29,3 +29,9 @@ Rozszerzenia projektu:
 * Integracja z frameworkiem frontendowym (React/Vue)
 
 
+zaktualizuj dokumentacje
+- dodaj mozliwosc laczenia roznych templates poporzez manifest, 
+- podaj przyklady integracji roznych jezykow, framework, jak mozna dzieki dodatkowej wirtualizacji z docker, renderowac w locie te moduly
+- stworz taki manifest z automatycznym renderowaniem poprozez podanie plikow i spospu renderowania np . docker i wyboru images: lokalny lub zdalny
+- reszta powinna po chwili stac sie sama porporzez automatyczne uruchomienie manifestu jako servera bazujacego na docker compose, 
+- dodaj mozliwosc uzycia innej domeny niz localhost z opcja tls dla produkcyjnych systemow

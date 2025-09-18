@@ -1,0 +1,276 @@
+# Landing Page Template extending Base Template
+# Demonstrates template inheritance and linking
+
+metadata:
+  title: "Modern Landing Page"
+  description: "Professional landing page template with hero section and features"
+  version: "1.0.0"
+  author: "Modular YAML System"
+  template_type: "page"
+  
+  # Template inheritance
+  extends: "./base-template.yaml"
+  
+  # Override base template settings
+  inheritance:
+    merge_styles: true
+    override_structure: true
+    preserve_slots: ["header", "footer"]
+
+# Additional styles extending base template
+styles:
+  # Hero section
+  hero: "background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white; padding: 80px 0; text-align: center;"
+  hero_title: "font-size: 3.5em; font-weight: bold; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+  hero_subtitle: "font-size: 1.3em; margin-bottom: 30px; opacity: 0.9; max-width: 600px; margin-left: auto; margin-right: auto;"
+  hero_cta: "background: var(--color-accent); color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;"
+  
+  # Features section
+  features: "padding: 80px 0; background: var(--color-surface);"
+  features_grid: "display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 50px;"
+  feature_card: "background: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s;"
+  feature_icon: "width: 60px; height: 60px; background: var(--color-primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; color: white;"
+  feature_title: "font-size: 1.5em; font-weight: 600; margin-bottom: 15px; color: var(--color-primary);"
+  feature_description: "color: #666; line-height: 1.6;"
+  
+  # CTA section
+  cta_section: "background: var(--color-primary); color: white; padding: 60px 0; text-align: center;"
+  cta_title: "font-size: 2.5em; font-weight: bold; margin-bottom: 20px;"
+  cta_description: "font-size: 1.2em; margin-bottom: 30px; opacity: 0.9;"
+  cta_button: "background: var(--color-accent); color: white; padding: 15px 40px; border: none; border-radius: 8px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin: 0 10px; transition: background 0.3s;"
+  cta_button_secondary: "background: transparent; color: white; padding: 15px 40px; border: 2px solid white; border-radius: 8px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin: 0 10px; transition: background 0.3s;"
+
+# Page structure overriding base template
+structure:
+  html:
+    lang: "en"
+    children:
+      - head:
+          children:
+            - meta:
+                charset: "UTF-8"
+            - meta:
+                name: "viewport"
+                content: "width=device-width, initial-scale=1.0"
+            - title:
+                text: "{{metadata.title}}"
+            - meta:
+                name: "description"
+                content: "{{metadata.description}}"
+            - style:
+                text: |
+                  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+                  
+                  :root {
+                    --color-primary: #007acc;
+                    --color-secondary: #68C242;
+                    --color-accent: #ff6b35;
+                    --color-background: #ffffff;
+                    --color-surface: #f8f9fa;
+                    --color-border: #e9ecef;
+                  }
+                  
+                  * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                  }
+                  
+                  body {
+                    font-family: 'Inter', Arial, sans-serif;
+                    background: var(--color-background);
+                    color: #333;
+                    line-height: 1.6;
+                  }
+                  
+                  .hero-cta:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(255,107,53,0.3);
+                  }
+                  
+                  .feature-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                  }
+                  
+                  .cta-button:hover {
+                    background: #e55a2b;
+                  }
+                  
+                  .cta-button-secondary:hover {
+                    background: rgba(255,255,255,0.1);
+                  }
+
+      - body:
+          children:
+            # Navigation slot (will be filled by header module)
+            - div:
+                id: "header-slot"
+                class: "template-slot"
+                
+            # Hero Section
+            - section:
+                style: "hero"
+                children:
+                  - div:
+                      style: "container"
+                      children:
+                        - h1:
+                            style: "hero_title"
+                            text: "Build Amazing Websites with YAML"
+                        - p:
+                            style: "hero_subtitle"
+                            text: "Create beautiful, responsive websites using simple YAML manifests. No complex frameworks, just clean, declarative configuration."
+                        - button:
+                            style: "hero_cta"
+                            class: "hero-cta"
+                            text: "Get Started Now"
+                            onclick: "window.location.href='#features'"
+            
+            # Features Section
+            - section:
+                style: "features"
+                children:
+                  - div:
+                      style: "container"
+                      children:
+                        - h2:
+                            style: "heading_secondary"
+                            text: "Why Choose YAML Manifests?"
+                            class: "text-center"
+                        - div:
+                            style: "features_grid"
+                            children:
+                              - div:
+                                  style: "feature_card"
+                                  class: "feature-card"
+                                  children:
+                                    - div:
+                                        style: "feature_icon"
+                                        text: "⚡"
+                                    - h3:
+                                        style: "feature_title"
+                                        text: "Lightning Fast"
+                                    - p:
+                                        style: "feature_description"
+                                        text: "Generate websites in seconds with our optimized conversion engine and modular architecture."
+                              
+                              - div:
+                                  style: "feature_card"
+                                  class: "feature-card"
+                                  children:
+                                    - div:
+                                        style: "feature_icon"
+                                        text: "🧩"
+                                    - h3:
+                                        style: "feature_title"
+                                        text: "Modular Design"
+                                    - p:
+                                        style: "feature_description"
+                                        text: "Build complex layouts using reusable components and template inheritance."
+                              
+                              - div:
+                                  style: "feature_card"
+                                  class: "feature-card"
+                                  children:
+                                    - div:
+                                        style: "feature_icon"
+                                        text: "🎯"
+                                    - h3:
+                                        style: "feature_title"
+                                        text: "Multi-Format"
+                                    - p:
+                                        style: "feature_description"
+                                        text: "Export to HTML, React, Vue, PHP, and more formats from a single YAML source."
+            
+            # CTA Section
+            - section:
+                style: "cta_section"
+                children:
+                  - div:
+                      style: "container"
+                      children:
+                        - h2:
+                            style: "cta_title"
+                            text: "Ready to Get Started?"
+                        - p:
+                            style: "cta_description"
+                            text: "Join thousands of developers who are already building with YAML manifests."
+                        - div:
+                            children:
+                              - button:
+                                  style: "cta_button"
+                                  class: "cta-button"
+                                  text: "Start Building"
+                              - button:
+                                  style: "cta_button_secondary"
+                                  class: "cta-button-secondary"
+                                  text: "View Documentation"
+            
+            # Footer slot (will be filled by footer module)
+            - div:
+                id: "footer-slot"
+                class: "template-slot"
+
+# Template slots configuration
+template_slots:
+  header:
+    element_id: "header-slot"
+    required: false
+    default_content:
+      nav:
+        style: "nav"
+        children:
+          - div:
+              style: "container flex"
+              children:
+                - div:
+                    text: "YAML Manifest System"
+                    style: "color: white; font-weight: bold; font-size: 1.2em;"
+                - div:
+                    children:
+                      - a:
+                          style: "nav_item"
+                          text: "Home"
+                          href: "#"
+                      - a:
+                          style: "nav_item"
+                          text: "Features"
+                          href: "#features"
+                      - a:
+                          style: "nav_item"
+                          text: "Documentation"
+                          href: "#docs"
+  
+  footer:
+    element_id: "footer-slot"
+    required: false
+    default_content:
+      footer:
+        style: "background: #333; color: white; padding: 40px 0; text-align: center;"
+        children:
+          - div:
+              style: "container"
+              children:
+                - p:
+                    text: "© 2024 Modular YAML Manifest System. Built with ❤️ for developers."
+                    style: "margin-bottom: 10px;"
+                - p:
+                    text: "Open source and available on GitHub"
+                    style: "color: #ccc; font-size: 0.9em;"
+
+# Module imports with template linking
+imports:
+  - type: "template"
+    path: "./base-template.yaml"
+    merge_mode: "extend"
+    
+  - type: "module"
+    path: "../components/header.yaml"
+    slot: "header"
+    fallback: "default_content"
+    
+  - type: "module"
+    path: "../components/footer.yaml"
+    slot: "footer"
+    fallback: "default_content"

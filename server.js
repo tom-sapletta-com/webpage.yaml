@@ -7,6 +7,9 @@
  * - Module resolution and bundling
  */
 
+// Load environment configuration
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -27,9 +30,11 @@ const {
 class ManifestServer {
   constructor(options = {}) {
     this.app = express();
-    this.port = options.port || 3000;
-    this.manifestDir = options.manifestDir || './manifests';
-    this.outputDir = options.outputDir || './output';
+    this.port = options.port || process.env.PORT || 3009;
+    this.manifestDir = options.manifestDir || process.env.MANIFEST_DIR || './manifests';
+    this.outputDir = options.outputDir || process.env.OUTPUT_DIR || './output';
+    this.examplesDir = process.env.EXAMPLES_DIR || './examples';
+    this.scriptsDir = process.env.SCRIPTS_DIR || './scripts';
     
     // Initialize converters
     this.manifestLoader = new ManifestLoader({ baseUrl: `http://localhost:${this.port}` });
@@ -45,13 +50,19 @@ class ManifestServer {
   }
 
   setupMiddleware() {
-    this.app.use(cors());
+    // CORS configuration from environment
+    if (process.env.CORS_ENABLED !== 'false') {
+      this.app.use(cors());
+    }
+    
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     
     // Serve static files
     this.app.use('/manifests', express.static(this.manifestDir));
     this.app.use('/output', express.static(this.outputDir));
+    this.app.use('/examples', express.static(this.examplesDir));
+    this.app.use('/scripts', express.static(this.scriptsDir));
     this.app.use('/', express.static('.'));
 
     // Error handling middleware
@@ -239,7 +250,8 @@ class ManifestServer {
       
       let manifest;
       if (directManifest) {
-        manifest = directManifest;
+        // Expand modules in directly passed manifest
+        manifest = await this.manifestLoader.expandManifest(directManifest);
       } else if (manifestName) {
         manifest = await this.loadManifest(manifestName, true);
       } else {
@@ -268,7 +280,8 @@ class ManifestServer {
       
       let manifest;
       if (directManifest) {
-        manifest = directManifest;
+        // Expand modules in directly passed manifest
+        manifest = await this.manifestLoader.expandManifest(directManifest);
       } else if (manifestName) {
         manifest = await this.loadManifest(manifestName, true);
       } else {
@@ -296,7 +309,8 @@ class ManifestServer {
       
       let manifest;
       if (directManifest) {
-        manifest = directManifest;
+        // Expand modules in directly passed manifest
+        manifest = await this.manifestLoader.expandManifest(directManifest);
       } else if (manifestName) {
         manifest = await this.loadManifest(manifestName, true);
       } else {
@@ -324,7 +338,8 @@ class ManifestServer {
       
       let manifest;
       if (directManifest) {
-        manifest = directManifest;
+        // Expand modules in directly passed manifest
+        manifest = await this.manifestLoader.expandManifest(directManifest);
       } else if (manifestName) {
         manifest = await this.loadManifest(manifestName, true);
       } else {

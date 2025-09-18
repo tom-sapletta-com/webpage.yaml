@@ -12,9 +12,7 @@
   <!-- JS-YAML -->
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
   
-  <!-- Load our modular system -->
-  <script src="./src/manifest-loader.js"></script>
-  <script src="./src/converters/format-converters.js"></script>
+  <!-- Note: Server-side modules loaded via API calls instead of direct browser import -->
 
   <style>
     * { box-sizing: border-box; }
@@ -461,20 +459,9 @@ responsive:
 
 // Initialize global state
 let currentFormat = 'preview';
-let manifestLoader;
-let converters = {};
 
-// Initialize converters when available
-if (typeof ManifestToReactConverter !== 'undefined') {
-  converters.react = new ManifestToReactConverter();
-  converters.vue = new ManifestToVueConverter();
-  converters.php = new ManifestToPHPConverter();
-  converters.html = new ManifestToHTMLConverter();
-}
-
-if (typeof ManifestLoader !== 'undefined') {
-  manifestLoader = new ManifestLoader();
-}
+// Use API-based conversion instead of direct module imports
+const API_BASE = window.location.origin + '/api';
 
 // Initialize CodeMirror
 const editor = CodeMirror(document.getElementById("editor"), {
@@ -512,23 +499,21 @@ function switchFormat(format) {
   currentFormat = format;
 }
 
-// Update all format views
-function updateAllFormats() {
+// Update all format views (now async for API calls)
+async function updateAllFormats() {
   const yamlText = editor.getValue();
   
   try {
     const manifest = jsyaml.load(yamlText);
     
-    // Update preview
+    // Update preview (immediate)
     updatePreview(manifest);
     
-    // Update other formats if converters are available
-    if (converters.react) {
-      updateReactFormat(manifest);
-      updateVueFormat(manifest);
-      updatePHPFormat(manifest);
-      updateHTMLFormat(manifest);
-    }
+    // Update other formats via API (async)
+    updateReactFormat(manifest);
+    updateVueFormat(manifest);
+    updatePHPFormat(manifest);
+    updateHTMLFormat(manifest);
     
     // Update module list
     updateModuleList(manifest);
@@ -567,41 +552,81 @@ function updatePreview(manifest) {
   }
 }
 
-// Update React format
-function updateReactFormat(manifest) {
+// Update React format using API
+async function updateReactFormat(manifest) {
   try {
-    const result = converters.react.convertToReact(manifest);
-    document.getElementById('react-code').textContent = result.content;
+    const response = await fetch(`${API_BASE}/convert/manifest-to-react`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manifest })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      document.getElementById('react-code').textContent = result.result.content;
+    } else {
+      throw new Error(`API Error: ${response.status}`);
+    }
   } catch (error) {
     document.getElementById('react-code').textContent = '// Error: ' + error.message;
   }
 }
 
-// Update Vue format
-function updateVueFormat(manifest) {
+// Update Vue format using API
+async function updateVueFormat(manifest) {
   try {
-    const result = converters.vue.convertToVue(manifest);
-    document.getElementById('vue-code').textContent = result.content;
+    const response = await fetch(`${API_BASE}/convert/manifest-to-vue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manifest })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      document.getElementById('vue-code').textContent = result.result.content;
+    } else {
+      throw new Error(`API Error: ${response.status}`);
+    }
   } catch (error) {
     document.getElementById('vue-code').textContent = '<!-- Error: ' + error.message + ' -->';
   }
 }
 
-// Update PHP format
-function updatePHPFormat(manifest) {
+// Update PHP format using API
+async function updatePHPFormat(manifest) {
   try {
-    const result = converters.php.convertToPHP(manifest);
-    document.getElementById('php-code').textContent = result.content;
+    const response = await fetch(`${API_BASE}/convert/manifest-to-php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manifest })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      document.getElementById('php-code').textContent = result.result.content;
+    } else {
+      throw new Error(`API Error: ${response.status}`);
+    }
   } catch (error) {
     document.getElementById('php-code').textContent = '<?php // Error: ' + error.message;
   }
 }
 
-// Update HTML format
-function updateHTMLFormat(manifest) {
+// Update HTML format using API
+async function updateHTMLFormat(manifest) {
   try {
-    const result = converters.html.convertToHTML(manifest);
-    document.getElementById('html-code').textContent = result.content;
+    const response = await fetch(`${API_BASE}/convert/manifest-to-html`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manifest })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      document.getElementById('html-code').textContent = result.result.content;
+    } else {
+      throw new Error(`API Error: ${response.status}`);
+    }
   } catch (error) {
     document.getElementById('html-code').textContent = '<!-- Error: ' + error.message + ' -->';
   }

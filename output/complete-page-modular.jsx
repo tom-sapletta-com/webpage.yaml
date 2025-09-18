@@ -44,7 +44,7 @@ document.querySelectorAll('.feature-card').forEach(card => {
         <meta name="description" content="Example of a complete webpage built with modular YAML manifests"></meta>
       </head>
       <body className="body">
-        <header module="header"></header>
+        <header header={{"style":"header-main","children":{"nav":{"style":"nav-container","children":[{"a":{"href":"/","style":"logo","text":"🎯 MyApp"}},{"ul":{"style":"nav-menu","children":[{"li":{"children":{"a":{"href":"/","style":"nav-link","text":"Home"}}}},{"li":{"children":{"a":{"href":"/about","style":"nav-link","text":"About"}}}},{"li":{"children":{"a":{"href":"/services","style":"nav-link","text":"Services"}}}},{"li":{"children":{"a":{"href":"/contact","style":"nav-link","text":"Contact"}}}}]}}]}}}}></header>
         <main className="main-content">
           <section className="hero">
             <div className="hero-container">
@@ -91,7 +91,7 @@ document.querySelectorAll('.feature-card').forEach(card => {
             </div>
           </section>
         </main>
-        <footer module="footer"></footer>
+        <footer footer={{"style":"footer-main","children":[{"div":{"style":"footer-container","children":[{"div":{"style":"footer-section","children":[{"h3":{"style":"footer-title","text":"Company"}},{"ul":{"style":"footer-links","children":[{"li":{"children":{"a":{"href":"/about","style":"footer-link","text":"About Us"}}}},{"li":{"children":{"a":{"href":"/careers","style":"footer-link","text":"Careers"}}}},{"li":{"children":{"a":{"href":"/press","style":"footer-link","text":"Press"}}}}]}}]}},{"div":{"style":"footer-section","children":[{"h3":{"style":"footer-title","text":"Support"}},{"ul":{"style":"footer-links","children":[{"li":{"children":{"a":{"href":"/help","style":"footer-link","text":"Help Center"}}}},{"li":{"children":{"a":{"href":"/contact","style":"footer-link","text":"Contact Us"}}}},{"li":{"children":{"a":{"href":"/status","style":"footer-link","text":"Service Status"}}}}]}}]}},{"div":{"style":"footer-section","children":[{"h3":{"style":"footer-title","text":"Legal"}},{"ul":{"style":"footer-links","children":[{"li":{"children":{"a":{"href":"/privacy","style":"footer-link","text":"Privacy Policy"}}}},{"li":{"children":{"a":{"href":"/terms","style":"footer-link","text":"Terms of Service"}}}},{"li":{"children":{"a":{"href":"/cookies","style":"footer-link","text":"Cookie Policy"}}}}]}}]}}]}},{"div":{"style":"footer-bottom","children":{"p":{"text":"© 2024 MyApp. All rights reserved."}}}}]}}></footer>
       </body>
     </html>
   );

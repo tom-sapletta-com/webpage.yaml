@@ -1,0 +1,127 @@
+# Base Template for Modular YAML Manifest System
+# This template provides a foundation for other templates to extend
+
+metadata:
+  title: "Base Template"
+  description: "Foundation template for YAML manifest system"
+  version: "1.0.0"
+  author: "Modular YAML System"
+  template_type: "base"
+  
+  # Template inheritance configuration
+  inheritance:
+    allows_extension: true
+    extendable_sections: ["styles", "structure", "metadata"]
+    protected_sections: ["template_info"]
+
+# Core CSS framework styles
+styles:
+  # Layout styles
+  container: "max-width: 1200px; margin: 0 auto; padding: 20px;"
+  grid: "display: grid; grid-gap: 20px;"
+  flex: "display: flex; align-items: center; justify-content: space-between;"
+  
+  # Typography
+  heading_primary: "font-family: 'Arial', sans-serif; font-size: 2.5em; font-weight: bold; margin-bottom: 20px;"
+  heading_secondary: "font-family: 'Arial', sans-serif; font-size: 2em; font-weight: 600; margin: 15px 0;"
+  text_primary: "font-family: 'Arial', sans-serif; font-size: 1em; line-height: 1.6; color: #333;"
+  text_secondary: "font-family: 'Arial', sans-serif; font-size: 0.9em; color: #666;"
+  
+  # Color scheme
+  color_primary: "#007acc"
+  color_secondary: "#68C242"
+  color_accent: "#ff6b35"
+  color_background: "#ffffff"
+  color_surface: "#f8f9fa"
+  color_border: "#e9ecef"
+  
+  # Component styles
+  button_primary: "background: var(--color-primary); color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s;"
+  button_secondary: "background: var(--color-secondary); color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;"
+  
+  card: "background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;"
+  card_header: "border-bottom: 1px solid var(--color-border); padding-bottom: 15px; margin-bottom: 15px;"
+  card_body: "padding: 0;"
+  card_footer: "border-top: 1px solid var(--color-border); padding-top: 15px; margin-top: 15px;"
+  
+  # Navigation
+  nav: "background: var(--color-primary); padding: 15px 0;"
+  nav_item: "color: white; text-decoration: none; padding: 8px 16px; margin: 0 5px; border-radius: 4px; transition: background 0.3s;"
+  nav_item_active: "background: rgba(255,255,255,0.2);"
+  
+  # Forms
+  form_group: "margin-bottom: 20px;"
+  form_label: "display: block; margin-bottom: 5px; font-weight: 600;"
+  form_input: "width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 16px;"
+  form_textarea: "width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 16px; resize: vertical; min-height: 100px;"
+
+# Basic structure template
+structure:
+  html:
+    lang: "en"
+    children:
+      - head:
+          children:
+            - meta:
+                charset: "UTF-8"
+            - meta:
+                name: "viewport"
+                content: "width=device-width, initial-scale=1.0"
+            - title:
+                text: "{{metadata.title}}"
+            - style:
+                text: |
+                  :root {
+                    --color-primary: #{styles.color_primary};
+                    --color-secondary: #{styles.color_secondary};
+                    --color-accent: #{styles.color_accent};
+                    --color-background: #{styles.color_background};
+                    --color-surface: #{styles.color_surface};
+                    --color-border: #{styles.color_border};
+                  }
+                  
+                  * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                  }
+                  
+                  body {
+                    font-family: Arial, sans-serif;
+                    background: var(--color-background);
+                    color: #333;
+                    line-height: 1.6;
+                  }
+      - body:
+          children:
+            - div:
+                style: "container"
+                id: "app"
+                children:
+                  # Placeholder for content - will be replaced by extending templates
+                  - div:
+                      id: "content-placeholder"
+                      text: "Content will be inserted here by extending templates"
+
+# Template extension points
+template_slots:
+  header: "Navigation and branding area"
+  main_content: "Primary content area"
+  sidebar: "Optional sidebar content"
+  footer: "Footer content and links"
+
+# Import configurations for modules
+imports:
+  - type: "css"
+    url: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    optional: true
+  
+  - type: "module"
+    path: "../components/header.yaml"
+    slot: "header"
+    optional: true
+    
+  - type: "module" 
+    path: "../components/footer.yaml"
+    slot: "footer"
+    optional: true

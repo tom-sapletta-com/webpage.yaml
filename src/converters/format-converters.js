@@ -361,9 +361,17 @@ class ManifestToVueConverter {
     const entries = Object.entries(structure);
     const [tag, props] = entries[0];
     
-    const attributes = this.convertPropsToVue(props);
-    const children = props.children;
-    const textContent = props.text;
+    // Handle double-nested module structures (tag: { tag: {...} })
+    let actualProps = props;
+    if (typeof props === 'object' && props !== null && 
+        props[tag] && typeof props[tag] === 'object') {
+      // Use inner content for double-nested modules
+      actualProps = props[tag];
+    }
+    
+    const attributes = this.convertPropsToVue(actualProps);
+    const children = actualProps.children;
+    const textContent = actualProps.text;
 
     // Handle self-closing tags
     const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
@@ -382,9 +390,44 @@ class ManifestToVueConverter {
     }
     
     if (children) {
-      const childrenVue = Array.isArray(children)
-        ? children.map(child => this.convertStructureToVue(child, indent + 1)).join('\n')
-        : this.convertStructureToVue(children, indent + 1);
+      let childrenVue = '';
+      
+      if (Array.isArray(children)) {
+        // Handle array of children
+        childrenVue = children.map(child => this.convertStructureToVue(child, indent + 1)).join('\n');
+      } else if (typeof children === 'object' && children !== null) {
+        // Handle object children (named sections like head/body or components)
+        const childEntries = Object.entries(children);
+        
+        if (childEntries.length === 1) {
+          // Single child object - process as element
+          const [childTag, childProps] = childEntries[0];
+          
+          // Handle double-nested module structures (header: { header: {...} })
+          if (typeof childProps === 'object' && childProps !== null && 
+              childProps[childTag] && typeof childProps[childTag] === 'object') {
+            // Double-nested structure - use inner content directly as props for outer tag
+            const innerProps = childProps[childTag];
+            const childStructure = { [childTag]: innerProps };
+            childrenVue = this.convertStructureToVue(childStructure, indent + 1);
+          } else {
+            // Normal single child structure
+            const childStructure = { [childTag]: childProps };
+            childrenVue = this.convertStructureToVue(childStructure, indent + 1);
+          }
+        } else {
+          // Multiple children as object - process each as separate element
+          childrenVue = childEntries
+            .map(([childTag, childProps]) => {
+              const childStructure = { [childTag]: childProps };
+              return this.convertStructureToVue(childStructure, indent + 1);
+            })
+            .join('\n');
+        }
+      } else {
+        // Handle primitive children
+        childrenVue = this.convertStructureToVue(children, indent + 1);
+      }
       
       if (textContent && children) {
         content = `${textContent}\n${childrenVue}\n${spaces}`;
@@ -566,9 +609,18 @@ ${assignments}
     }
 
     const [tag, props] = Object.entries(structure)[0];
-    const attributes = this.convertPropsToPHP(props);
-    const children = props.children;
-    const textContent = props.text;
+    
+    // Handle double-nested module structures (tag: { tag: {...} })
+    let actualProps = props;
+    if (typeof props === 'object' && props !== null && 
+        props[tag] && typeof props[tag] === 'object') {
+      // Use inner content for double-nested modules
+      actualProps = props[tag];
+    }
+    
+    const attributes = this.convertPropsToPHP(actualProps);
+    const children = actualProps.children;
+    const textContent = actualProps.text;
 
     // Handle self-closing tags
     const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
@@ -587,9 +639,44 @@ ${assignments}
     }
     
     if (children) {
-      const childrenHTML = Array.isArray(children)
-        ? children.map(child => this.convertStructureToPHP(child)).join('')
-        : this.convertStructureToPHP(children);
+      let childrenHTML = '';
+      
+      if (Array.isArray(children)) {
+        // Handle array of children
+        childrenHTML = children.map(child => this.convertStructureToPHP(child)).join('');
+      } else if (typeof children === 'object' && children !== null) {
+        // Handle object children (named sections like head/body or components)
+        const childEntries = Object.entries(children);
+        
+        if (childEntries.length === 1) {
+          // Single child object - process as element
+          const [childTag, childProps] = childEntries[0];
+          
+          // Handle double-nested module structures (header: { header: {...} })
+          if (typeof childProps === 'object' && childProps !== null && 
+              childProps[childTag] && typeof childProps[childTag] === 'object') {
+            // Double-nested structure - use inner content directly as props for outer tag
+            const innerProps = childProps[childTag];
+            const childStructure = { [childTag]: innerProps };
+            childrenHTML = this.convertStructureToPHP(childStructure);
+          } else {
+            // Normal single child structure
+            const childStructure = { [childTag]: childProps };
+            childrenHTML = this.convertStructureToPHP(childStructure);
+          }
+        } else {
+          // Multiple children as object - process each as separate element
+          childrenHTML = childEntries
+            .map(([childTag, childProps]) => {
+              const childStructure = { [childTag]: childProps };
+              return this.convertStructureToPHP(childStructure);
+            })
+            .join('');
+        }
+      } else {
+        // Handle primitive children
+        childrenHTML = this.convertStructureToPHP(children);
+      }
       
       if (textContent && children) {
         content = `${textContent}${childrenHTML}`;
@@ -740,9 +827,18 @@ ${styles}${imports}`;
     }
 
     const [tag, props] = Object.entries(structure)[0];
-    const attributes = this.convertPropsToHTML(props);
-    const children = props.children;
-    const textContent = props.text;
+    
+    // Handle double-nested module structures (tag: { tag: {...} })
+    let actualProps = props;
+    if (typeof props === 'object' && props !== null && 
+        props[tag] && typeof props[tag] === 'object') {
+      // Use inner content for double-nested modules
+      actualProps = props[tag];
+    }
+    
+    const attributes = this.convertPropsToHTML(actualProps);
+    const children = actualProps.children;
+    const textContent = actualProps.text;
 
     // Handle self-closing tags
     const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
@@ -773,8 +869,19 @@ ${styles}${imports}`;
         if (childEntries.length === 1) {
           // Single child object - process as element
           const [childTag, childProps] = childEntries[0];
-          const childStructure = { [childTag]: childProps };
-          childrenHTML = this.convertStructureToHTML(childStructure, indent + 1);
+          
+          // Handle double-nested module structures (header: { header: {...} })
+          if (typeof childProps === 'object' && childProps !== null && 
+              childProps[childTag] && typeof childProps[childTag] === 'object') {
+            // Double-nested structure - use inner content directly as props for outer tag
+            const innerProps = childProps[childTag];
+            const childStructure = { [childTag]: innerProps };
+            childrenHTML = this.convertStructureToHTML(childStructure, indent + 1);
+          } else {
+            // Normal single child structure
+            const childStructure = { [childTag]: childProps };
+            childrenHTML = this.convertStructureToHTML(childStructure, indent + 1);
+          }
         } else {
           // Multiple children as object - process each as separate element
           childrenHTML = childEntries

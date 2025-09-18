@@ -101,6 +101,105 @@ class ManifestLoader {
   }
 
   /**
+   * Expand modules in a manifest object (without loading from file/URL)
+   * Used when manifest is passed directly to API endpoints
+   */
+  async expandManifest(manifestObj, baseDir = null) {
+    // Create a copy to avoid mutating the original
+    let manifest = JSON.parse(JSON.stringify(manifestObj));
+    
+    // Set baseDir for module resolution context
+    const originalBaseDir = this.baseDir;
+    const originalBaseUrl = this.baseUrl;
+    
+    if (baseDir) {
+      this.baseDir = baseDir;
+    } else if (!this.baseDir || typeof this.baseDir !== 'string') {
+      this.baseDir = './manifests';
+    }
+    
+    // Force local file loading by clearing baseUrl
+    this.baseUrl = '';
+    
+    try {
+      // Handle template inheritance first
+      if (manifest.metadata && manifest.metadata.extends) {
+        manifest = await this._processTemplateInheritance(manifest);
+      }
+
+      // Validate manifest structure
+      this._validateManifest(manifest);
+
+      // Resolve and load modules if they exist
+      if (manifest.modules && manifest.modules.length > 0) {
+        // Resolve modules using local file system with proper path resolution
+        manifest.modules = await this._resolveModulesLocal(manifest.modules);
+      }
+
+      // Process template slots
+      if (manifest.template_slots) {
+        manifest = await this._processTemplateSlots(manifest);
+      }
+
+      // Process imports with proper base context
+      if (manifest.imports) {
+        manifest._processedImports = await this._processImportsAdvanced(manifest.imports, '.');
+      }
+
+      // Merge styles from modules
+      manifest._mergedStyles = this._mergeModuleStyles(manifest);
+
+      // Expand module references in structure
+      if (manifest.structure) {
+        manifest.structure = this._expandModuleReferences(manifest.structure, manifest.modules);
+      }
+
+      return manifest;
+    } finally {
+      // Restore original settings
+      this.baseDir = originalBaseDir;
+      this.baseUrl = originalBaseUrl;
+    }
+  }
+
+  /**
+   * Resolve module dependencies for local file system (no HTTP URLs)
+   * Used by expandManifest for direct manifest processing
+   */
+  async _resolveModulesLocal(modules) {
+    const resolvedModules = {};
+    const loadPromises = modules.map(async (moduleConfig) => {
+      // Force local file path resolution
+      let moduleUrl = moduleConfig.url;
+      
+      // Resolve relative to manifests directory
+      if (!moduleUrl.startsWith('/')) {
+        moduleUrl = path.join(this.baseDir, moduleUrl);
+      }
+      
+      const loadedModule = await this.loadManifest(moduleUrl);
+      
+      // Apply version constraints if specified
+      if (moduleConfig.version && moduleConfig.version !== 'latest') {
+        this._checkVersionCompatibility(loadedModule, moduleConfig.version);
+      }
+
+      resolvedModules[moduleConfig.alias] = {
+        config: moduleConfig,
+        manifest: loadedModule,
+        url: moduleUrl,
+        loaded: true,
+        source: moduleConfig.url,
+        version: moduleConfig.version || 'latest',
+        exports: loadedModule.exports || {}
+      };
+    });
+
+    await Promise.all(loadPromises);
+    return resolvedModules;
+  }
+
+  /**
    * Resolve module dependencies
    */
   async _resolveModules(modules, baseUrl) {
@@ -143,6 +242,158 @@ class ManifestLoader {
 
     await Promise.all(loadPromises);
     return resolvedModules;
+  }
+
+  /**
+   * Process template inheritance
+   */
+  async _processTemplateInheritance(manifest) {
+    const templatePath = manifest.metadata.extends;
+    const templateManifest = await this.loadManifest(templatePath);
+    
+    // Merge inheritance configuration
+    const inheritanceConfig = {
+      merge_styles: true,
+      override_structure: false,
+      preserve_slots: [],
+      ...manifest.metadata.inheritance
+    };
+    
+    // Create merged manifest
+    const mergedManifest = JSON.parse(JSON.stringify(templateManifest));
+    
+    // Merge metadata
+    mergedManifest.metadata = {
+      ...templateManifest.metadata,
+      ...manifest.metadata
+    };
+    
+    // Merge styles
+    if (inheritanceConfig.merge_styles && manifest.styles) {
+      mergedManifest.styles = {
+        ...templateManifest.styles,
+        ...manifest.styles
+      };
+    } else if (manifest.styles) {
+      mergedManifest.styles = manifest.styles;
+    }
+    
+    // Handle structure inheritance
+    if (inheritanceConfig.override_structure && manifest.structure) {
+      mergedManifest.structure = manifest.structure;
+    } else if (manifest.structure) {
+      mergedManifest.structure = this._mergeStructures(
+        templateManifest.structure,
+        manifest.structure,
+        inheritanceConfig.preserve_slots
+      );
+    }
+    
+    // Merge template slots
+    if (manifest.template_slots) {
+      mergedManifest.template_slots = {
+        ...templateManifest.template_slots,
+        ...manifest.template_slots
+      };
+    }
+    
+    // Merge imports
+    if (manifest.imports) {
+      mergedManifest.imports = [
+        ...(templateManifest.imports || []),
+        ...manifest.imports
+      ];
+    }
+    
+    return mergedManifest;
+  }
+
+  /**
+   * Process template slots
+   */
+  async _processTemplateSlots(manifest) {
+    if (!manifest.template_slots) return manifest;
+    
+    const processedManifest = JSON.parse(JSON.stringify(manifest));
+    
+    for (const [slotName, slotConfig] of Object.entries(manifest.template_slots)) {
+      // Find slot element in structure
+      const slotElement = this._findElementById(processedManifest.structure, slotConfig.element_id);
+      
+      if (slotElement) {
+        // Check if we have content for this slot from imports
+        const slotContent = await this._resolveSlotContent(slotName, slotConfig, manifest.imports);
+        
+        if (slotContent) {
+          // Replace slot element with actual content
+          this._replaceSlotElement(processedManifest.structure, slotConfig.element_id, slotContent);
+        } else if (slotConfig.default_content) {
+          // Use default content if available
+          this._replaceSlotElement(processedManifest.structure, slotConfig.element_id, slotConfig.default_content);
+        }
+      }
+    }
+    
+    return processedManifest;
+  }
+
+  /**
+   * Process external imports (scripts, styles, fonts) with advanced features
+   */
+  async _processImportsAdvanced(imports, baseUrl) {
+    const processed = {
+      scripts: [],
+      styles: [],
+      fonts: [],
+      modules: [],
+      templates: []
+    };
+
+    for (const importItem of imports) {
+      if (typeof importItem === 'string') {
+        // Legacy format - assume it's a style
+        processed.styles.push(this.resolveUrl(importItem, baseUrl));
+      } else if (typeof importItem === 'object') {
+        const { type, url, path, slot, optional = false } = importItem;
+        
+        try {
+          switch (type) {
+            case 'css':
+            case 'style':
+              processed.styles.push(this.resolveUrl(url || path, baseUrl));
+              break;
+            case 'js':
+            case 'script':
+              processed.scripts.push(this.resolveUrl(url || path, baseUrl));
+              break;
+            case 'font':
+              processed.fonts.push(this.resolveUrl(url || path, baseUrl));
+              break;
+            case 'module':
+              // Handle module imports for slots
+              if (slot) {
+                const moduleManifest = await this.loadManifest(path);
+                processed.modules.push({
+                  slot,
+                  manifest: moduleManifest,
+                  path: path
+                });
+              }
+              break;
+            case 'template':
+              // Template inheritance is handled separately
+              break;
+          }
+        } catch (error) {
+          if (!optional) {
+            throw new Error(`Failed to process import: ${error.message}`);
+          }
+          console.warn(`Optional import failed: ${error.message}`);
+        }
+      }
+    }
+
+    return processed;
   }
 
   /**
@@ -322,6 +573,157 @@ class ManifestLoader {
         throw new Error(`Version mismatch: required ${requiredVersion}, got ${manifestVersion}`);
       }
     }
+  }
+
+  /**
+   * Merge structures from template inheritance
+   */
+  _mergeStructures(templateStructure, childStructure, preserveSlots = []) {
+    if (!templateStructure) return childStructure;
+    if (!childStructure) return templateStructure;
+    
+    // Deep merge structures while preserving certain slots
+    const merged = JSON.parse(JSON.stringify(templateStructure));
+    
+    const mergeNodes = (templateNode, childNode, path = '') => {
+      if (!templateNode || !childNode) return childNode || templateNode;
+      
+      if (Array.isArray(childNode)) {
+        return childNode;
+      }
+      
+      if (typeof childNode === 'object' && typeof templateNode === 'object') {
+        const result = { ...templateNode };
+        
+        for (const [key, value] of Object.entries(childNode)) {
+          const currentPath = path ? `${path}.${key}` : key;
+          
+          // Check if this is a preserved slot
+          if (preserveSlots.includes(currentPath)) {
+            result[key] = templateNode[key] || value;
+          } else if (templateNode[key] && typeof value === 'object' && !Array.isArray(value)) {
+            result[key] = mergeNodes(templateNode[key], value, currentPath);
+          } else {
+            result[key] = value;
+          }
+        }
+        
+        return result;
+      }
+      
+      return childNode;
+    };
+    
+    return mergeNodes(templateStructure, childStructure);
+  }
+
+  /**
+   * Find element by ID in structure
+   */
+  _findElementById(structure, elementId) {
+    if (!structure || !elementId) return null;
+    
+    const findInNode = (node) => {
+      if (typeof node !== 'object' || node === null) return null;
+      
+      if (Array.isArray(node)) {
+        for (const item of node) {
+          const found = findInNode(item);
+          if (found) return found;
+        }
+        return null;
+      }
+      
+      // Check if this node has the target ID
+      for (const [tag, props] of Object.entries(node)) {
+        if (props && props.id === elementId) {
+          return { tag, props, parent: node };
+        }
+        
+        // Recursively search children
+        if (props && props.children) {
+          const found = findInNode(props.children);
+          if (found) return found;
+        }
+      }
+      
+      return null;
+    };
+    
+    return findInNode(structure);
+  }
+
+  /**
+   * Resolve slot content from imports
+   */
+  async _resolveSlotContent(slotName, slotConfig, imports) {
+    if (!imports) return null;
+    
+    // Look for module imports that target this slot
+    for (const importItem of imports) {
+      if (typeof importItem === 'object' && importItem.slot === slotName) {
+        if (importItem.type === 'module' && importItem.path) {
+          try {
+            const moduleManifest = await this.loadManifest(importItem.path);
+            return moduleManifest.structure || moduleManifest.exports?.structure;
+          } catch (error) {
+            if (!importItem.optional) {
+              throw error;
+            }
+            console.warn(`Optional slot content failed to load: ${error.message}`);
+          }
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Replace slot element with actual content
+   */
+  _replaceSlotElement(structure, elementId, content) {
+    if (!structure || !elementId || !content) return;
+    
+    const replaceInNode = (node) => {
+      if (typeof node !== 'object' || node === null) return false;
+      
+      if (Array.isArray(node)) {
+        for (let i = 0; i < node.length; i++) {
+          if (replaceInNode(node[i])) return true;
+          
+          // Check if array item needs replacement
+          if (typeof node[i] === 'object') {
+            for (const [tag, props] of Object.entries(node[i])) {
+              if (props && props.id === elementId) {
+                node[i] = content;
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+      
+      // Check current node
+      for (const [tag, props] of Object.entries(node)) {
+        if (props && props.id === elementId) {
+          // Replace the entire node
+          Object.keys(node).forEach(key => delete node[key]);
+          Object.assign(node, content);
+          return true;
+        }
+        
+        // Recursively search children
+        if (props && props.children) {
+          if (replaceInNode(props.children)) return true;
+        }
+      }
+      
+      return false;
+    };
+    
+    replaceInNode(structure);
   }
 
   /**
