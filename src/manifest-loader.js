@@ -92,6 +92,11 @@ class ManifestLoader {
     // Merge styles from modules
     manifest._mergedStyles = this._mergeModuleStyles(manifest);
 
+    // Expand module references in structure
+    if (manifest.structure) {
+      manifest.structure = this._expandModuleReferences(manifest.structure, manifest.modules);
+    }
+
     return manifest;
   }
 
@@ -157,6 +162,51 @@ class ManifestLoader {
     }
 
     return processed;
+  }
+
+  /**
+   * Expand module references in structure
+   */
+  _expandModuleReferences(structure, modules) {
+    if (!structure || !modules) return structure;
+
+    const expandNode = (node) => {
+      if (typeof node !== 'object' || node === null) return node;
+
+      // Handle arrays
+      if (Array.isArray(node)) {
+        return node.map(expandNode);
+      }
+
+      // Handle objects
+      const result = {};
+      for (const [key, value] of Object.entries(node)) {
+        if (typeof value === 'object' && value !== null) {
+          // Check if this node has a module reference
+          if (value.module && modules[value.module]) {
+            const moduleManifest = modules[value.module].manifest;
+            // Try to get component structure from module exports
+            if (moduleManifest.exports && moduleManifest.exports.components && moduleManifest.exports.components[key]) {
+              result[key] = expandNode(moduleManifest.exports.components[key]);
+            } else if (moduleManifest.structure) {
+              // Fallback to module's main structure
+              result[key] = expandNode(moduleManifest.structure);
+            } else {
+              // Keep original if no matching structure found
+              result[key] = expandNode(value);
+            }
+          } else {
+            // Recursively expand children
+            result[key] = expandNode(value);
+          }
+        } else {
+          result[key] = value;
+        }
+      }
+      return result;
+    };
+
+    return expandNode(structure);
   }
 
   /**
