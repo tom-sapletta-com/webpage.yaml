@@ -29,7 +29,7 @@ Rozszerzenia projektu:
 * Integracja z frameworkiem frontendowym (React/Vue)
 
 
-zaktualizuj dokumentacje
+zaktualizuj dokumentacje z ascii, mermaid, przykladami, 
 - dodaj mozliwosc laczenia roznych templates poporzez manifest, 
 - podaj przyklady integracji roznych jezykow, framework, jak mozna dzieki dodatkowej wirtualizacji z docker, renderowac w locie te moduly
 - stworz taki manifest z automatycznym renderowaniem poprozez podanie plikow i spospu renderowania np . docker i wyboru images: lokalny lub zdalny
