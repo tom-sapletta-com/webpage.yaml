@@ -761,9 +761,24 @@ ${styles}${imports}`;
     }
     
     if (children) {
-      const childrenHTML = Array.isArray(children)
-        ? children.map(child => this.convertStructureToHTML(child, indent + 1)).join('\n')
-        : this.convertStructureToHTML(children, indent + 1);
+      let childrenHTML = '';
+      
+      if (Array.isArray(children)) {
+        // Handle array of children
+        childrenHTML = children.map(child => this.convertStructureToHTML(child, indent + 1)).join('\n');
+      } else if (typeof children === 'object' && children !== null) {
+        // Handle single child object or object with multiple children
+        if (Object.keys(children).length === 1 && typeof Object.values(children)[0] === 'object') {
+          // Single nested child
+          childrenHTML = this.convertStructureToHTML(children, indent + 1);
+        } else {
+          // Object representing a single element structure
+          childrenHTML = this.convertStructureToHTML(children, indent + 1);
+        }
+      } else {
+        // Handle primitive children
+        childrenHTML = this.convertStructureToHTML(children, indent + 1);
+      }
       
       if (textContent && children) {
         content = `\n${spaces}  ${textContent}\n${childrenHTML}\n${spaces}`;
