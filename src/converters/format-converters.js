@@ -767,13 +767,22 @@ ${styles}${imports}`;
         // Handle array of children
         childrenHTML = children.map(child => this.convertStructureToHTML(child, indent + 1)).join('\n');
       } else if (typeof children === 'object' && children !== null) {
-        // Handle single child object or object with multiple children
-        if (Object.keys(children).length === 1 && typeof Object.values(children)[0] === 'object') {
-          // Single nested child
-          childrenHTML = this.convertStructureToHTML(children, indent + 1);
+        // Handle object children (named sections like head/body or components)
+        const childEntries = Object.entries(children);
+        
+        if (childEntries.length === 1) {
+          // Single child object - process as element
+          const [childTag, childProps] = childEntries[0];
+          const childStructure = { [childTag]: childProps };
+          childrenHTML = this.convertStructureToHTML(childStructure, indent + 1);
         } else {
-          // Object representing a single element structure
-          childrenHTML = this.convertStructureToHTML(children, indent + 1);
+          // Multiple children as object - process each as separate element
+          childrenHTML = childEntries
+            .map(([childTag, childProps]) => {
+              const childStructure = { [childTag]: childProps };
+              return this.convertStructureToHTML(childStructure, indent + 1);
+            })
+            .join('\n');
         }
       } else {
         // Handle primitive children
