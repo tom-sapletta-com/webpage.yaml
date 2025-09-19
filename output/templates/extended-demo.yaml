@@ -1,0 +1,35 @@
+metadata:
+  title: "Extended Template Demo"
+  description: "Demonstrates template extension capabilities"
+  extends: "../base-template.yaml"
+
+styles:
+  # Extend base styles with new ones
+  demo_section: "background: #f8f9fa; padding: 40px 0;"
+  demo_card: "background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+
+structure:
+  html:
+    lang: "en"
+    children:
+      - head:
+          children:
+            - meta:
+                charset: "UTF-8"
+            - title:
+                text: "{{metadata.title}}"
+      - body:
+          children:
+            - section:
+                style: "demo_section"
+                children:
+                  - div:
+                      style: "container"
+                      children:
+                        - div:
+                            style: "demo_card"
+                            children:
+                              - h2:
+                                  text: "Template Extension Working!"
+                              - p:
+                                  text: "This template successfully extends the base template with additional styles and structure."

@@ -1,0 +1,397 @@
+# Automatic Docker Rendering Manifest
+# Demonstrates automatic Docker container generation and rendering from YAML manifests
+
+metadata:
+  title: "Docker Auto-Rendering Demo"
+  description: "Automatic Docker container generation and rendering demonstration"
+  version: "1.0.0"
+  author: "Modular YAML System"
+  type: "docker_manifest"
+  
+  # Docker rendering configuration
+  docker:
+    auto_render: true
+    base_image: "node:18-alpine"
+    working_dir: "/app"
+    expose_port: 3000
+    environment:
+      NODE_ENV: "production"
+      MANIFEST_MODE: "docker"
+    
+    # Multi-stage rendering options
+    stages:
+      - name: "builder"
+        image: "node:18-alpine"
+        commands:
+          - "npm install"
+          - "npm run build"
+      - name: "runtime" 
+        image: "nginx:alpine"
+        copy_from: "builder"
+        commands:
+          - "nginx -g 'daemon off;'"
+
+# Styles optimized for Docker rendering
+styles:
+  # Docker-optimized container styles
+  docker_container: "max-width: 1200px; margin: 0 auto; padding: 20px; font-family: 'Roboto', sans-serif;"
+  docker_header: "background: linear-gradient(90deg, #0066cc, #004499); color: white; padding: 30px 0; text-align: center; margin-bottom: 30px;"
+  docker_title: "font-size: 3em; font-weight: bold; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+  docker_subtitle: "font-size: 1.3em; opacity: 0.9; margin-bottom: 0;"
+  
+  # Status indicators
+  status_container: "display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;"
+  status_card: "background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid #28a745; text-align: center;"
+  status_icon: "font-size: 2.5em; margin-bottom: 15px; color: #28a745;"
+  status_title: "font-size: 1.2em; font-weight: 600; margin-bottom: 10px; color: #333;"
+  status_text: "color: #666; font-size: 0.95em;"
+  
+  # Docker info section
+  docker_info: "background: #f8f9fa; padding: 30px; border-radius: 8px; margin: 30px 0;"
+  docker_info_title: "font-size: 1.5em; font-weight: 600; margin-bottom: 20px; color: #0066cc;"
+  code_block: "background: #2d3748; color: #e2e8f0; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9em; overflow-x: auto; margin: 15px 0;"
+  
+  # Interactive elements
+  docker_button: "background: #0066cc; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s; margin: 5px;"
+  docker_button_success: "background: #28a745;"
+  docker_button_warning: "background: #ffc107; color: #212529;"
+
+# Structure optimized for containerized rendering
+structure:
+  html:
+    lang: "en"
+    children:
+      - head:
+          children:
+            - meta:
+                charset: "UTF-8"
+            - meta:
+                name: "viewport"
+                content: "width=device-width, initial-scale=1.0"
+            - title:
+                text: "{{metadata.title}} - Running in Docker"
+            - link:
+                rel: "stylesheet"
+                href: "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+            - style:
+                text: |
+                  body { 
+                    margin: 0; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    min-height: 100vh;
+                    font-family: 'Roboto', sans-serif;
+                  }
+                  
+                  .container {
+                    background: white;
+                    border-radius: 16px;
+                    margin: 20px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                  }
+                  
+                  .docker-button:hover { opacity: 0.9; transform: translateY(-1px); }
+                  
+                  @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                  }
+                  
+                  .status-icon { animation: pulse 2s infinite; }
+      
+      - body:
+          children:
+            - div:
+                style: "docker_container"
+                class: "container"
+                children:
+                  # Header section
+                  - header:
+                      style: "docker_header"
+                      children:
+                        - h1:
+                            style: "docker_title"
+                            text: "🐳 Docker Auto-Rendering"
+                        - p:
+                            style: "docker_subtitle"
+                            text: "Manifest automatically deployed and rendered in Docker container"
+                  
+                  # Status indicators
+                  - section:
+                      children:
+                        - h2:
+                            style: "docker_info_title"
+                            text: "Container Status"
+                        - div:
+                            style: "status_container"
+                            children:
+                              - div:
+                                  style: "status_card"
+                                  children:
+                                    - div:
+                                        style: "status_icon"
+                                        class: "status-icon"
+                                        text: "✅"
+                                    - h3:
+                                        style: "status_title"
+                                        text: "Container Running"
+                                    - p:
+                                        style: "status_text"
+                                        text: "Docker container successfully started and serving content"
+                              
+                              - div:
+                                  style: "status_card"
+                                  children:
+                                    - div:
+                                        style: "status_icon"
+                                        class: "status-icon"
+                                        text: "🔄"
+                                    - h3:
+                                        style: "status_title"
+                                        text: "Auto-Rendering Active"
+                                    - p:
+                                        style: "status_text"
+                                        text: "Manifest automatically converted to HTML and deployed"
+                              
+                              - div:
+                                  style: "status_card"
+                                  children:
+                                    - div:
+                                        style: "status_icon"
+                                        class: "status-icon"
+                                        text: "🌐"
+                                    - h3:
+                                        style: "status_title"
+                                        text: "Service Available"
+                                    - p:
+                                        style: "status_text"
+                                        text: "Application accessible on port 3000"
+                  
+                  # Docker configuration info
+                  - section:
+                      style: "docker_info"
+                      children:
+                        - h2:
+                            style: "docker_info_title"
+                            text: "Docker Configuration"
+                        - p:
+                            text: "This manifest automatically generates the following Docker configuration:"
+                        - div:
+                            style: "code_block"
+                            text: |
+                              FROM node:18-alpine
+                              WORKDIR /app
+                              COPY package*.json ./
+                              RUN npm install
+                              COPY . .
+                              EXPOSE 3000
+                              ENV NODE_ENV=production
+                              ENV MANIFEST_MODE=docker
+                              CMD ["npm", "start"]
+                        
+                        - h3:
+                            style: "margin: 25px 0 15px 0; font-size: 1.2em;"
+                            text: "Docker Compose Service:"
+                        - div:
+                            style: "code_block"
+                            text: |
+                              version: '3.8'
+                              services:
+                                manifest-app:
+                                  build: .
+                                  ports:
+                                    - "3000:3000"
+                                  environment:
+                                    - NODE_ENV=production
+                                    - MANIFEST_MODE=docker
+                                  restart: unless-stopped
+                  
+                  # Interactive controls
+                  - section:
+                      children:
+                        - h2:
+                            style: "docker_info_title"
+                            text: "Container Controls"
+                        - div:
+                            style: "text-align: center; margin: 30px 0;"
+                            children:
+                              - button:
+                                  style: "docker_button docker_button_success"
+                                  text: "Container Status: Running"
+                                  onclick: "alert('Container is healthy and running!')"
+                              - button:
+                                  style: "docker_button"
+                                  text: "View Logs"
+                                  onclick: "alert('Docker logs: Container started successfully\\nManifest rendered to HTML\\nServer listening on port 3000')"
+                              - button:
+                                  style: "docker_button docker_button_warning"
+                                  text: "Rebuild Container"
+                                  onclick: "alert('Rebuilding container with latest manifest changes...')"
+                  
+                  # Runtime information
+                  - section:
+                      style: "docker_info"
+                      children:
+                        - h2:
+                            style: "docker_info_title"
+                            text: "Runtime Information"
+                        - div:
+                            style: "display: grid; grid-template-columns: 1fr 1fr; gap: 20px;"
+                            children:
+                              - div:
+                                  children:
+                                    - h4:
+                                        text: "Container Details:"
+                                    - ul:
+                                        style: "list-style-type: none; padding: 0;"
+                                        children:
+                                          - li:
+                                              text: "🐳 Image: node:18-alpine"
+                                              style: "padding: 5px 0;"
+                                          - li:
+                                              text: "📁 Working Dir: /app"
+                                              style: "padding: 5px 0;"
+                                          - li:
+                                              text: "🌐 Port: 3000"
+                                              style: "padding: 5px 0;"
+                                          - li:
+                                              text: "🔧 Environment: production"
+                                              style: "padding: 5px 0;"
+                              - div:
+                                  children:
+                                    - h4:
+                                        text: "Manifest Features:"
+                                    - ul:
+                                        style: "list-style-type: none; padding: 0;"
+                                        children:
+                                          - li:
+                                              text: "⚡ Auto HTML conversion"
+                                              style: "padding: 5px 0;"
+                                          - li:
+                                              text: "🔄 Live reload support"
+                                              style: "padding: 5px 0;"
+                                          - li:
+                                              text: "🎨 Dynamic styling"
+                                              style: "padding: 5px 0;"
+                                          - li:
+                                              text: "📱 Responsive design"
+                                              style: "padding: 5px 0;"
+                  
+                  # Footer with timestamp
+                  - footer:
+                      style: "text-align: center; padding: 30px 0; border-top: 1px solid #eee; margin-top: 30px; color: #666;"
+                      children:
+                        - p:
+                            text: "🐳 Automatically rendered in Docker container"
+                        - p:
+                            text: "Generated at: {{timestamp}}"
+                            style: "font-size: 0.9em; margin-top: 10px;"
+
+# Docker-specific configuration
+docker_config:
+  # Dockerfile generation
+  dockerfile:
+    base_image: "node:18-alpine"
+    working_directory: "/app"
+    copy_files: [".", "."]
+    run_commands:
+      - "npm install --production"
+      - "npm cache clean --force"
+    expose_ports: [3000]
+    environment:
+      NODE_ENV: "production"
+      MANIFEST_MODE: "docker"
+      PORT: "3000"
+    cmd: ["node", "server.js"]
+    
+  # Docker Compose configuration
+  compose:
+    version: "3.8"
+    services:
+      manifest_app:
+        build: "."
+        ports: ["3000:3000"]
+        environment:
+          - "NODE_ENV=production"
+          - "MANIFEST_MODE=docker"
+        restart: "unless-stopped"
+        healthcheck:
+          test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+          interval: "30s"
+          timeout: "10s"
+          retries: 3
+      
+      nginx:
+        image: "nginx:alpine"
+        ports: ["80:80"]
+        depends_on: ["manifest_app"]
+        volumes:
+          - "./nginx.conf:/etc/nginx/nginx.conf"
+        restart: "unless-stopped"
+
+# Automatic rendering pipeline
+rendering:
+  pipeline:
+    - step: "validate_manifest"
+      action: "validate YAML structure and required fields"
+    - step: "generate_dockerfile"
+      action: "create Dockerfile from docker_config"
+    - step: "build_image"
+      action: "docker build -t manifest-app ."
+    - step: "start_container"
+      action: "docker run -d -p 3000:3000 manifest-app"
+    - step: "health_check"
+      action: "verify container health and service availability"
+  
+  # Automated deployment options
+  deployment:
+    auto_deploy: true
+    platforms: ["docker", "docker-compose", "kubernetes"]
+    monitoring: true
+    logging: true
+    
+    # Kubernetes deployment (optional)
+    kubernetes:
+      deployment_name: "manifest-app"
+      replicas: 3
+      service_type: "LoadBalancer"
+      ingress_enabled: true
+
+# Runtime scripts and automation
+scripts:
+  build: "docker build -t manifest-demo ."
+  run: "docker run -d -p 3000:3000 --name manifest-demo-container manifest-demo"
+  stop: "docker stop manifest-demo-container && docker rm manifest-demo-container"
+  logs: "docker logs -f manifest-demo-container"
+  shell: "docker exec -it manifest-demo-container /bin/sh"
+  
+  # Automation scripts
+  auto_build: |
+    #!/bin/bash
+    echo "🐳 Auto-building Docker container from manifest..."
+    docker build -t manifest-auto-demo .
+    echo "✅ Container built successfully!"
+    
+  auto_deploy: |
+    #!/bin/bash
+    echo "🚀 Auto-deploying container..."
+    docker run -d -p 3000:3000 --name manifest-auto-demo manifest-auto-demo
+    echo "✅ Container deployed and running on http://localhost:3000"
+
+# Development and debugging
+development:
+  hot_reload: true
+  debug_mode: true
+  volume_mounts:
+    - source: "."
+      target: "/app"
+      type: "bind"
+  environment:
+    DEBUG: "*"
+    NODE_ENV: "development"
+    
+# Monitoring and observability
+monitoring:
+  health_endpoint: "/health"
+  metrics_endpoint: "/metrics"
+  log_level: "info"
+  prometheus_enabled: true

@@ -88,6 +88,9 @@ class ManifestServer {
     this.app.post('/api/convert/manifest-to-vue', this.convertManifestToVue.bind(this));
     this.app.post('/api/convert/manifest-to-php', this.convertManifestToPHP.bind(this));
     this.app.post('/api/convert/manifest-to-html', this.convertManifestToHTML.bind(this));
+    
+    // Validation route
+    this.app.post('/api/validate', this.validateManifest.bind(this));
 
     // Bulk operations
     this.app.post('/api/convert/bulk', this.bulkConvert.bind(this));
@@ -355,6 +358,73 @@ class ManifestServer {
       res.json({ result, success: true });
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * Validate manifest structure and content
+   */
+  async validateManifest(req, res) {
+    try {
+      const manifest = req.body;
+      
+      if (!manifest) {
+        return res.status(400).json({ 
+          valid: false, 
+          errors: ['No manifest data provided'] 
+        });
+      }
+
+      const errors = [];
+      const warnings = [];
+
+      // Check required sections
+      if (!manifest.metadata) {
+        errors.push('Missing required section: metadata');
+      }
+      
+      if (!manifest.structure) {
+        errors.push('Missing required section: structure');
+      }
+
+      // Validate metadata
+      if (manifest.metadata) {
+        if (!manifest.metadata.title) {
+          warnings.push('Metadata should include a title');
+        }
+      }
+
+      // Validate styles if present
+      if (manifest.styles) {
+        Object.keys(manifest.styles).forEach(styleKey => {
+          if (typeof manifest.styles[styleKey] !== 'string') {
+            errors.push(`Style '${styleKey}' should be a string`);
+          }
+        });
+      }
+
+      // Try to expand manifest to check for resolution issues
+      try {
+        await this.manifestLoader.expandManifest(manifest);
+      } catch (expandError) {
+        errors.push(`Manifest expansion failed: ${expandError.message}`);
+      }
+
+      const isValid = errors.length === 0;
+      
+      res.json({
+        valid: isValid,
+        errors,
+        warnings,
+        success: true
+      });
+    } catch (error) {
+      console.error('Manifest validation error:', error);
+      res.status(500).json({ 
+        valid: false, 
+        errors: [error.message], 
+        success: false 
+      });
     }
   }
 

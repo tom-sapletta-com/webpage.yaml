@@ -30,21 +30,16 @@ class ManifestClient:
         """Load manifest from file or URL"""
         try:
             if file_path.startswith(('http://', 'https://')):
-                # Load from URL
+                # Load from URL - use url-to-manifest converter
                 response = self.session.post(
-                    f"{self.server_url}/api/load/url",
+                    f"{self.server_url}/api/convert/url-to-manifest",
                     json={"url": file_path}
                 )
             else:
-                # Load from file
+                # Load from file - parse locally and return as dict
                 with open(file_path, 'r') as f:
-                    manifest_data = f.read()
-                
-                response = self.session.post(
-                    f"{self.server_url}/api/load/manifest",
-                    headers={'Content-Type': 'text/yaml'},
-                    data=manifest_data
-                )
+                    manifest_data = yaml.safe_load(f.read())
+                return manifest_data
             
             response.raise_for_status()
             return response.json()
@@ -55,9 +50,14 @@ class ManifestClient:
     def convert_to_format(self, manifest_data: Dict[str, Any], format_type: str) -> str:
         """Convert manifest to specified format (html, react, vue, php)"""
         try:
+            # Wrap manifest data in expected format for server API
+            request_data = {
+                "manifest": manifest_data,
+                "options": {}
+            }
             response = self.session.post(
                 f"{self.server_url}/api/convert/manifest-to-{format_type}",
-                json=manifest_data
+                json=request_data
             )
             response.raise_for_status()
             return response.text

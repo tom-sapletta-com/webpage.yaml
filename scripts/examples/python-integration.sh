@@ -29,8 +29,15 @@ fi
 # Set up Python virtual environment and install dependencies
 echo -e "${YELLOW}📦 Setting up Python virtual environment...${NC}"
 
+# Get the project root directory (2 levels up from scripts/examples/)
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+EXAMPLES_DIR="$PROJECT_ROOT/examples/python"
+VENV_PATH="$EXAMPLES_DIR/venv"
+
+echo "Project root: $PROJECT_ROOT"
+echo "Examples directory: $EXAMPLES_DIR"
+
 # Create virtual environment if it doesn't exist
-VENV_PATH="examples/python/venv"
 if [ ! -d "$VENV_PATH" ]; then
     python3 -m venv "$VENV_PATH" || {
         echo -e "${RED}❌ Failed to create Python virtual environment${NC}"
@@ -60,14 +67,18 @@ fi
 echo -e "${GREEN}✅ Server is running at $SERVER_URL${NC}"
 
 # Create output directory
-mkdir -p examples/python/output
+mkdir -p "$EXAMPLES_DIR/output"
 
 # Run Python examples
 echo -e "${BLUE}🚀 Executing Python client examples...${NC}"
-cd examples/python
+cd "$EXAMPLES_DIR"
+
+# Ensure we're in the right directory and use Python from virtual environment
+echo "Current directory: $(pwd)"
+echo "Python script exists: $(ls -la manifest_client.py | head -1)"
 
 # Use Python from virtual environment
-../../../examples/python/venv/bin/python manifest_client.py
+"$VENV_PATH/bin/python" manifest_client.py
 
 echo ""
 echo -e "${GREEN}🎉 Python integration examples completed successfully!${NC}"

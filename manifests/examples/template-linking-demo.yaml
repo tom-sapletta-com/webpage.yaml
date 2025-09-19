@@ -1,0 +1,282 @@
+# Advanced Template Linking Demo
+# Demonstrates comprehensive template inheritance and component integration
+
+metadata:
+  title: "Advanced Template Linking Demo"
+  description: "Comprehensive demonstration of template inheritance, component modules, and manifest linking"
+  version: "1.0.0"
+  author: "Modular YAML System"
+  template_type: "demo_page"
+  
+  # Advanced linking configuration
+  linking:
+    base_template: "../templates/base-template.yaml"
+    merge_strategy: "deep_merge"
+    component_resolution: "auto"
+    fallback_mode: "graceful"
+
+# Enhanced styles extending and overriding base template
+styles:
+  # Inherit from base and extend
+  demo_hero: "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; text-align: center; position: relative; overflow: hidden;"
+  demo_hero_title: "font-size: 4em; font-weight: 800; margin-bottom: 20px; text-shadow: 0 4px 8px rgba(0,0,0,0.3); animation: fadeInUp 1s ease-out;"
+  demo_hero_subtitle: "font-size: 1.4em; opacity: 0.95; max-width: 700px; margin: 0 auto 40px; line-height: 1.6;"
+  
+  # Advanced grid layouts
+  demo_features: "padding: 80px 0; background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);"
+  demo_grid: "display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 50px;"
+  demo_card: "background: white; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative; overflow: hidden;"
+  demo_card_hover: "transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.15);"
+  
+  # Component integration styles
+  linked_header: "background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000;"
+  linked_footer: "background: #1a1a1a; color: #f0f0f0; padding: 60px 0 20px;"
+  
+  # Interactive elements
+  demo_button: "background: linear-gradient(45deg, #ff6b6b, #ee5a52); color: white; padding: 15px 30px; border: none; border-radius: 50px; font-weight: 600; font-size: 1.1em; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255,107,107,0.4);"
+  demo_button_hover: "transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,107,107,0.6);"
+  
+  # Animation keyframes (will be injected into CSS)
+  animations: |
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+# Advanced structure with component slots and linking
+structure:
+  html:
+    lang: "en"
+    children:
+      - head:
+          children:
+            - meta:
+                charset: "UTF-8"
+            - meta:
+                name: "viewport"
+                content: "width=device-width, initial-scale=1.0"
+            - meta:
+                name: "description"
+                content: "{{metadata.description}}"
+            - title:
+                text: "{{metadata.title}}"
+            - style:
+                text: |
+                  {{styles.animations}}
+                  
+                  :root {
+                    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                  }
+                  
+                  .demo-card:hover {
+                    transform: translateY(-10px);
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+                  }
+                  
+                  .demo-button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(255,107,107,0.6);
+                  }
+      
+      - body:
+          children:
+            # Linked header component slot
+            - div:
+                id: "header-slot"
+                class: "component-slot linked-header"
+                data-component: "header"
+                data-fallback: "default-header"
+            
+            # Hero section with advanced styling
+            - section:
+                style: "demo_hero"
+                class: "demo-hero"
+                children:
+                  - div:
+                      style: "container"
+                      children:
+                        - h1:
+                            style: "demo_hero_title"
+                            text: "Advanced Template Linking"
+                            class: "hero-title"
+                        - p:
+                            style: "demo_hero_subtitle"
+                            text: "Experience the power of modular YAML manifests with seamless template inheritance, component integration, and dynamic content generation."
+                        - button:
+                            style: "demo_button"
+                            class: "demo-button"
+                            text: "Explore Features"
+                            onclick: "document.getElementById('features').scrollIntoView({behavior: 'smooth'})"
+            
+            # Features section with component integration
+            - section:
+                id: "features"
+                style: "demo_features"
+                children:
+                  - div:
+                      style: "container"
+                      children:
+                        - h2:
+                            style: "heading_secondary"
+                            text: "Template Linking Capabilities"
+                            class: "section-title"
+                        - div:
+                            style: "demo_grid"
+                            class: "features-grid"
+                            children:
+                              - div:
+                                  style: "demo_card"
+                                  class: "demo-card feature-card"
+                                  children:
+                                    - div:
+                                        style: "feature_icon"
+                                        text: "🔗"
+                                        class: "feature-icon"
+                                    - h3:
+                                        style: "feature_title"
+                                        text: "Template Inheritance"
+                                        class: "card-title"
+                                    - p:
+                                        style: "feature_description"
+                                        text: "Extend base templates with custom styles, structure, and content while maintaining consistency and reusability."
+                                        class: "card-description"
+                              
+                              - div:
+                                  style: "demo_card"
+                                  class: "demo-card feature-card"
+                                  children:
+                                    - div:
+                                        style: "feature_icon"
+                                        text: "🧩"
+                                        class: "feature-icon"
+                                    - h3:
+                                        style: "feature_title"
+                                        text: "Component Modules"
+                                        class: "card-title"
+                                    - p:
+                                        style: "feature_description"
+                                        text: "Integrate reusable component modules like headers, footers, and custom widgets with automatic resolution and fallbacks."
+                              
+                              - div:
+                                  style: "demo_card"
+                                  class: "demo-card feature-card"
+                                  children:
+                                    - div:
+                                        style: "feature_icon"
+                                        text: "⚡"
+                                        class: "feature-icon"
+                                    - h3:
+                                        style: "feature_title"
+                                        text: "Dynamic Linking"
+                                        class: "card-title"
+                                    - p:
+                                        style: "feature_description"
+                                        text: "Automatic resolution of template dependencies, component imports, and style merging with intelligent conflict resolution."
+            
+            # Demonstration section
+            - section:
+                style: "padding: 80px 0; background: white;"
+                children:
+                  - div:
+                      style: "container"
+                      children:
+                        - h2:
+                            style: "heading_secondary"
+                            text: "Live Integration Demo"
+                            class: "text-center"
+                        - div:
+                            style: "text-align: center; margin: 40px 0;"
+                            children:
+                              - p:
+                                  style: "text_primary"
+                                  text: "This page demonstrates:"
+                              - ul:
+                                  style: "list-style: none; padding: 0; max-width: 600px; margin: 20px auto;"
+                                  children:
+                                    - li:
+                                        style: "padding: 10px 0; border-bottom: 1px solid #eee;"
+                                        text: "✓ Base template extension with custom styles"
+                                    - li:
+                                        style: "padding: 10px 0; border-bottom: 1px solid #eee;"
+                                        text: "✓ Component module integration (header/footer)"
+                                    - li:
+                                        style: "padding: 10px 0; border-bottom: 1px solid #eee;"
+                                        text: "✓ Advanced CSS animations and interactions"
+                                    - li:
+                                        style: "padding: 10px 0;"
+                                        text: "✓ Multi-format output generation"
+            
+            # Linked footer component slot
+            - div:
+                id: "footer-slot"
+                class: "component-slot linked-footer"
+                data-component: "footer"
+                data-fallback: "default-footer"
+
+# Component linking configuration
+components:
+  header:
+    source: "../components/header.yaml"
+    slot: "header-slot"
+    merge_styles: true
+    required: false
+    fallback:
+      nav:
+        style: "linked_header"
+        children:
+          - div:
+              style: "container flex"
+              children:
+                - div:
+                    text: "Template Linking Demo"
+                    style: "color: white; font-weight: bold; font-size: 1.3em;"
+                - div:
+                    children:
+                      - a:
+                          style: "nav_item"
+                          text: "Home"
+                          href: "#"
+                      - a:
+                          style: "nav_item"
+                          text: "Features"
+                          href: "#features"
+  
+  footer:
+    source: "../components/footer.yaml"
+    slot: "footer-slot"
+    merge_styles: true
+    required: false
+    fallback:
+      footer:
+        style: "linked_footer"
+        children:
+          - div:
+              style: "container"
+              children:
+                - div:
+                    style: "text-align: center; padding: 20px 0;"
+                    children:
+                      - p:
+                          text: "© 2024 Advanced Template Linking Demo"
+                          style: "margin-bottom: 10px; font-weight: 600;"
+                      - p:
+                          text: "Powered by Modular YAML Manifest System"
+                          style: "color: #999; font-size: 0.9em;"
+
+# Advanced imports with linking options
+imports:
+  - type: "css"
+    url: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+
+# Deployment and rendering options
+deployment:
+  formats: ["html", "react", "vue", "php"]
+  docker_enabled: true
+  cdn_assets: true
+  optimization: "production"

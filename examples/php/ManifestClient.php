@@ -31,22 +31,21 @@ class ManifestClient {
     public function loadManifest($filePath): array {
         try {
             if (filter_var($filePath, FILTER_VALIDATE_URL)) {
-                // Load from URL
-                $response = $this->makeRequest('POST', '/api/load/url', [
+                // Load from URL - use url-to-manifest converter
+                $response = $this->makeRequest('POST', '/api/convert/url-to-manifest', [
                     'url' => $filePath
                 ]);
+                return json_decode($response, true) ?: [];
             } else {
-                // Load from file
+                // Load from file - parse locally using YAML
                 if (!file_exists($filePath)) {
                     throw new Exception("File not found: $filePath");
                 }
                 
-                $manifestData = file_get_contents($filePath);
-                $response = $this->makeRequest('POST', '/api/load/manifest', 
-                    $manifestData, ['Content-Type: text/yaml']);
+                $yamlContent = file_get_contents($filePath);
+                // Simple YAML parsing for basic structures
+                return $this->parseSimpleYAML($yamlContent);
             }
-            
-            return json_decode($response, true) ?: [];
         } catch (Exception $e) {
             error_log("Error loading manifest: " . $e->getMessage());
             return [];
@@ -58,8 +57,13 @@ class ManifestClient {
      */
     public function convertToFormat(array $manifestData, string $format): string {
         try {
+            // Wrap manifest data in expected format for server API
+            $requestData = [
+                'manifest' => $manifestData,
+                'options' => []
+            ];
             $response = $this->makeRequest('POST', "/api/convert/manifest-to-$format", 
-                $manifestData);
+                $requestData);
             return $response ?: '';
         } catch (Exception $e) {
             error_log("Error converting to $format: " . $e->getMessage());
@@ -213,6 +217,69 @@ class ManifestClient {
         }
         
         return $response;
+    }
+    
+    /**
+     * Simple YAML parser for basic manifest structures
+     * Note: This is a simplified parser for demonstration. 
+     * In production, use a proper YAML library like symfony/yaml
+     */
+    private function parseSimpleYAML(string $yamlContent): array {
+        $lines = explode("\n", $yamlContent);
+        $result = [];
+        $currentSection = null;
+        $indentLevel = 0;
+        
+        foreach ($lines as $line) {
+            $line = rtrim($line);
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
+            
+            $currentIndent = strlen($line) - strlen(ltrim($line));
+            $cleanLine = trim($line);
+            
+            if (strpos($cleanLine, ':') !== false) {
+                list($key, $value) = explode(':', $cleanLine, 2);
+                $key = trim($key);
+                $value = trim($value);
+                
+                if ($currentIndent == 0) {
+                    $currentSection = $key;
+                    if (!empty($value) && $value !== '') {
+                        $result[$key] = $this->parseValue($value);
+                    } else {
+                        $result[$key] = [];
+                    }
+                } elseif ($currentSection && $currentIndent == 2) {
+                    if (!empty($value) && $value !== '') {
+                        $result[$currentSection][$key] = $this->parseValue($value);
+                    }
+                }
+            }
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Parse YAML value types (strings, numbers, booleans)
+     */
+    private function parseValue(string $value): mixed {
+        $value = trim($value, '"\'');
+        
+        // Boolean values
+        if (in_array(strtolower($value), ['true', 'false'])) {
+            return strtolower($value) === 'true';
+        }
+        
+        // Numeric values
+        if (is_numeric($value)) {
+            return strpos($value, '.') !== false ? (float)$value : (int)$value;
+        }
+        
+        // String values
+        return $value;
     }
 }
 
